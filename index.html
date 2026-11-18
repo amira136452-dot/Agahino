@@ -4,6 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#155eef">
+<meta name="description" content="آگهینو؛ پلتفرم ساده ثبت و مشاهده آگهی‌های خرید، فروش کالا و خدمات.">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="./icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>آگهینو | بازار خرید و فروش و خدمات</title>
 <style>
 :root{--blue:#155eef;--blue2:#0b46c5;--ink:#182230;--muted:#667085;--line:#e4e7ec;--bg:#f6f8fc;--white:#fff;--green:#079455;--red:#d92d20;--shadow:0 8px 28px rgba(16,24,40,.07)}
@@ -37,7 +42,7 @@ footer{border-top:1px solid var(--line);background:#fff;padding:22px 0;color:var
 <div class="layout">
 <aside class="sidebar">
 <div class="panel"><h3>ثبت سریع آگهی</h3><p class="hint">برای شروع، آگهی خود را ثبت کنید.</p><button class="btn primary" style="width:100%" onclick="openModal()">＋ ثبت آگهی جدید</button>
-<div class="notice">این نسخه نمایشی است. آگهی‌ها فعلاً فقط در همین مرورگر ذخیره می‌شوند و هنوز برای کاربران دیگر قابل مشاهده نیستند.</div>
+<div class="notice">نسخه آزمایشی آگهینو: آگهی‌ها فعلاً فقط در همین مرورگر ذخیره می‌شوند و هنوز برای کاربران دیگر قابل مشاهده نیستند. در صورت نصب سایت، پوسته آن پس از اولین بازدید می‌تواند آفلاین هم باز شود.</div>
 </div></aside>
 <section><div class="feed-head"><h2 style="margin:0;font-size:20px">آگهی‌های تازه</h2><select id="sort" onchange="render()"><option value="new">جدیدترین</option><option value="cheap">ارزان‌ترین</option><option value="expensive">گران‌ترین</option></select></div>
 <div class="cards" id="cards"></div></section>
@@ -63,7 +68,7 @@ const starter=[
 {id:2,title:'نمونه آگهی: خدمات فنی',category:'خدمات',price:0,city:'تهران',description:'ارائه خدمات و انجام کارهای فنی. این آگهی صرفاً برای نمایش ظاهر سایت است.',date:Date.now()-2000}
 ];
 function getAds(){try{return JSON.parse(localStorage.getItem('agahino_ads'))||starter}catch(e){return starter}}
-function setAds(a){localStorage.setItem('agahino_ads',JSON.stringify(a))}
+function setAds(a){try{localStorage.setItem('agahino_ads',JSON.stringify(a));return true}catch(e){toast('فضای ذخیره‌سازی مرورگر کافی نیست. تصویر کوچک‌تری انتخاب کنید یا چند آگهی را حذف کنید.');return false}}
 function money(n){return n?Number(n).toLocaleString('fa-IR')+' تومان':'توافقی'}
 function toast(t){let e=document.getElementById('toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2600)}
 function renderChips(){document.getElementById('chips').innerHTML=categories.map(c=>`<button class="chip ${active===c?'active':''}" onclick="active=${JSON.stringify(c)};render()">${c}</button>`).join('')}
@@ -78,8 +83,9 @@ function openModal(){document.getElementById('modal').classList.add('show')}
 function closeModal(){document.getElementById('modal').classList.remove('show')}
 async function saveAd(e){e.preventDefault();let file=document.getElementById('image').files[0],img='';
 if(file){if(file.size>1024*1024){toast('حجم تصویر باید کمتر از ۱ مگابایت باشد.');return}img=await new Promise((res,rej)=>{let r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file)})}
-let ads=getAds();ads.unshift({id:Date.now(),title:document.getElementById('title').value.trim(),category:document.getElementById('category').value,price:Number(document.getElementById('price').value)||0,city:document.getElementById('city').value.trim(),description:document.getElementById('description').value.trim(),image:img,date:Date.now(),userAdded:true});setAds(ads);document.getElementById('adForm').reset();closeModal();render();toast('آگهی در همین مرورگر ذخیره شد.')}
-function deleteAd(id){if(!confirm('این آگهی حذف شود؟'))return;setAds(getAds().filter(a=>a.id!==id));render();toast('آگهی حذف شد.')}
+let ads=getAds();ads.unshift({id:Date.now(),title:document.getElementById('title').value.trim(),category:document.getElementById('category').value,price:Number(document.getElementById('price').value)||0,city:document.getElementById('city').value.trim(),description:document.getElementById('description').value.trim(),image:img,date:Date.now(),userAdded:true});if(!setAds(ads))return;document.getElementById('adForm').reset();closeModal();render();toast('آگهی در همین مرورگر ذخیره شد.')}
+function deleteAd(id){if(!confirm('این آگهی حذف شود؟'))return;if(!setAds(getAds().filter(a=>a.id!==id)))return;render();toast('آگهی حذف شد.')}
 render();
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}
 </script>
 </body></html>
