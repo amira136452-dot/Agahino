@@ -1,1 +1,85 @@
-
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#155eef">
+<title>آگهینو | بازار خرید و فروش و خدمات</title>
+<style>
+:root{--blue:#155eef;--blue2:#0b46c5;--ink:#182230;--muted:#667085;--line:#e4e7ec;--bg:#f6f8fc;--white:#fff;--green:#079455;--red:#d92d20;--shadow:0 8px 28px rgba(16,24,40,.07)}
+*{box-sizing:border-box}body{margin:0;font-family:Tahoma,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.8}button,input,select,textarea{font:inherit}button{cursor:pointer}.wrap{max-width:1120px;margin:auto;padding:0 16px}
+header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}.top{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 0}.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);font-weight:900;font-size:24px}.logo{width:42px;height:42px;border-radius:13px;background:linear-gradient(135deg,#155eef,#7f56d9);display:grid;place-items:center;color:#fff;font-size:22px}.brand small{display:block;font-size:11px;color:var(--muted);font-weight:500}.top-actions{display:flex;gap:8px}.btn{border:0;border-radius:11px;padding:10px 16px;font-weight:700}.primary{background:var(--blue);color:#fff}.primary:hover{background:var(--blue2)}.light{background:#eef4ff;color:var(--blue)}.outline{background:#fff;border:1px solid var(--line);color:var(--ink)}
+.hero{padding:38px 0 28px;background:linear-gradient(135deg,#eaf1ff,#f8faff 60%,#f2edff)}.hero h1{font-size:clamp(25px,5vw,38px);line-height:1.5;margin:0 0 8px}.hero p{margin:0 0 20px;color:#475467}.searchbar{display:flex;gap:8px;max-width:760px;background:#fff;border:1px solid var(--line);border-radius:15px;padding:7px;box-shadow:var(--shadow)}.searchbar input{flex:1;min-width:0;border:0;outline:0;padding:8px 10px}
+.stats{display:flex;gap:18px;flex-wrap:wrap;margin-top:18px;color:#475467;font-size:13px}.stats b{color:var(--ink)}
+main{padding:26px 0 60px}.section-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}.section-head h2{font-size:21px;margin:0}.categories{display:flex;gap:8px;overflow:auto;padding:2px 0 14px}.chip{white-space:nowrap;border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 14px;color:#344054}.chip.active{background:#eaf1ff;border-color:#b2ccff;color:var(--blue);font-weight:700}
+.layout{display:grid;grid-template-columns:270px 1fr;gap:20px;align-items:start}.panel,.listing{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 2px 8px rgba(16,24,40,.03)}.panel{padding:18px}.panel h3{margin:0 0 12px;font-size:17px}.field{margin-bottom:13px}.field label{display:block;font-size:13px;font-weight:700;margin-bottom:5px}.field input,.field select,.field textarea{width:100%;border:1px solid #d0d5dd;border-radius:10px;padding:10px 11px;background:#fff;outline:none}.field input:focus,.field select:focus,.field textarea:focus{border-color:#84adff;box-shadow:0 0 0 3px #eff4ff}.field textarea{min-height:95px;resize:vertical}.hint{font-size:11px;color:var(--muted)}.feed-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.feed-head select{border:1px solid var(--line);border-radius:9px;padding:7px;background:#fff}
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.listing{overflow:hidden}.photo{height:155px;background:linear-gradient(135deg,#eef4ff,#f2edff);display:grid;place-items:center;color:#98a2b3;font-size:42px}.photo img{width:100%;height:100%;object-fit:cover}.listing-body{padding:13px}.listing h3{font-size:16px;margin:0 0 5px;line-height:1.6}.price{font-weight:900;color:var(--blue);margin:6px 0}.meta{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:8px}.desc{font-size:13px;color:#475467;margin:8px 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.empty{padding:38px 15px;text-align:center;background:#fff;border:1px dashed #cbd5e1;border-radius:15px;color:var(--muted);grid-column:1/-1}.notice{font-size:12px;color:#475467;background:#fffaeb;border:1px solid #fedf89;padding:11px;border-radius:11px;margin-top:14px}
+footer{border-top:1px solid var(--line);background:#fff;padding:22px 0;color:var(--muted);font-size:12px;text-align:center}
+.modal-back{display:none;position:fixed;inset:0;background:#10182899;z-index:10;padding:18px;overflow:auto}.modal-back.show{display:grid;place-items:center}.modal{background:#fff;border-radius:18px;width:min(560px,100%);padding:20px;max-height:95vh;overflow:auto}.modal-head{display:flex;justify-content:space-between;align-items:center}.modal-head h2{margin:0;font-size:20px}.close{border:0;background:#f2f4f7;border-radius:9px;width:36px;height:36px;font-size:20px}.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#101828;color:#fff;padding:10px 16px;border-radius:10px;display:none;z-index:20;max-width:90%;font-size:13px}.toast.show{display:block}
+@media(max-width:800px){.layout{grid-template-columns:1fr}.sidebar{order:2}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.hero{padding-top:27px}}
+@media(max-width:480px){.top{align-items:flex-start}.brand{font-size:21px}.top-actions .btn{padding:8px 10px;font-size:12px}.cards{grid-template-columns:1fr}.photo{height:180px}.searchbar{flex-wrap:wrap}.searchbar input{flex-basis:100%}.searchbar button{width:100%}}
+</style>
+</head>
+<body>
+<header><div class="wrap top">
+<a class="brand" href="#"><span class="logo">آ</span><span>آگهینو<small>بازار خرید، فروش و خدمات</small></span></a>
+<div class="top-actions"><button class="btn light" onclick="document.getElementById('categories').scrollIntoView({behavior:'smooth'})">دسته‌بندی‌ها</button><button class="btn primary" onclick="openModal()">＋ ثبت آگهی</button></div>
+</div></header>
+<section class="hero"><div class="wrap">
+<h1>هر چیزی برای خرید و فروش، اینجاست!</h1>
+<p>آگهی‌های کالا و خدمات را ساده پیدا کنید یا آگهی خودتان را ثبت کنید.</p>
+<div class="searchbar"><input id="search" placeholder="دنبال چه چیزی می‌گردید؟ مثلاً گوشی، خودرو، خدمات..." oninput="render()"><button class="btn primary" onclick="render()">جستجو</button></div>
+<div class="stats"><span>🛍️ خرید و فروش آسان</span><span>📍 آگهی بر اساس شهر</span><span>✨ ثبت آگهی رایگان در نسخه آزمایشی</span></div>
+</div></section>
+<main class="wrap">
+<div class="section-head" id="categories"><h2>دسته‌بندی آگهی‌ها</h2><span class="hint">یک دسته را انتخاب کنید</span></div>
+<div class="categories" id="chips"></div>
+<div class="layout">
+<aside class="sidebar">
+<div class="panel"><h3>ثبت سریع آگهی</h3><p class="hint">برای شروع، آگهی خود را ثبت کنید.</p><button class="btn primary" style="width:100%" onclick="openModal()">＋ ثبت آگهی جدید</button>
+<div class="notice">این نسخه نمایشی است. آگهی‌ها فعلاً فقط در همین مرورگر ذخیره می‌شوند و هنوز برای کاربران دیگر قابل مشاهده نیستند.</div>
+</div></aside>
+<section><div class="feed-head"><h2 style="margin:0;font-size:20px">آگهی‌های تازه</h2><select id="sort" onchange="render()"><option value="new">جدیدترین</option><option value="cheap">ارزان‌ترین</option><option value="expensive">گران‌ترین</option></select></div>
+<div class="cards" id="cards"></div></section>
+</div></main>
+<footer><div class="wrap">آگهینو © ۱۴۰۵ — نسخه اولیه در حال توسعه است.</div></footer>
+<div class="modal-back" id="modal" onclick="if(event.target===this)closeModal()"><div class="modal">
+<div class="modal-head"><h2>ثبت آگهی جدید</h2><button class="close" onclick="closeModal()">×</button></div>
+<form id="adForm" onsubmit="saveAd(event)">
+<div class="field"><label>عنوان آگهی *</label><input id="title" required maxlength="70" placeholder="مثلاً فروش گوشی سامسونگ"></div>
+<div class="field"><label>دسته‌بندی *</label><select id="category" required><option value="">انتخاب کنید</option><option>کالای دیجیتال</option><option>خانه و آشپزخانه</option><option>خودرو و وسایل نقلیه</option><option>املاک</option><option>خدمات</option><option>وسایل شخصی</option><option>سایر</option></select></div>
+<div class="field"><label>قیمت (تومان)</label><input id="price" type="number" min="0" placeholder="برای توافقی خالی بگذارید"></div>
+<div class="field"><label>شهر *</label><input id="city" required placeholder="مثلاً اراک"></div>
+<div class="field"><label>توضیحات</label><textarea id="description" maxlength="500" placeholder="جزئیات کالا یا خدمات را بنویسید..."></textarea></div>
+<div class="field"><label>تصویر آگهی (اختیاری، حداکثر ۱ مگابایت)</label><input id="image" type="file" accept="image/*"><div class="hint">برای عملکرد بهتر، تصویر کم‌حجم انتخاب کنید.</div></div>
+<button class="btn primary" type="submit" style="width:100%">ثبت آگهی</button>
+</form></div></div>
+<div class="toast" id="toast"></div>
+<script>
+const categories=['همه آگهی‌ها','کالای دیجیتال','خانه و آشپزخانه','خودرو و وسایل نقلیه','املاک','خدمات','وسایل شخصی','سایر'];
+let active='همه آگهی‌ها';
+const starter=[
+{id:1,title:'نمونه آگهی: گوشی هوشمند',category:'کالای دیجیتال',price:8500000,city:'اراک',description:'این یک آگهی نمونه است. برای ثبت آگهی واقعی، روی دکمه ثبت آگهی بزنید.',date:Date.now()-1000},
+{id:2,title:'نمونه آگهی: خدمات فنی',category:'خدمات',price:0,city:'تهران',description:'ارائه خدمات و انجام کارهای فنی. این آگهی صرفاً برای نمایش ظاهر سایت است.',date:Date.now()-2000}
+];
+function getAds(){try{return JSON.parse(localStorage.getItem('agahino_ads'))||starter}catch(e){return starter}}
+function setAds(a){localStorage.setItem('agahino_ads',JSON.stringify(a))}
+function money(n){return n?Number(n).toLocaleString('fa-IR')+' تومان':'توافقی'}
+function toast(t){let e=document.getElementById('toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2600)}
+function renderChips(){document.getElementById('chips').innerHTML=categories.map(c=>`<button class="chip ${active===c?'active':''}" onclick="active=${JSON.stringify(c)};render()">${c}</button>`).join('')}
+function render(){
+renderChips();let q=document.getElementById('search').value.trim().toLowerCase(),ads=getAds();
+ads=ads.filter(a=>(active==='همه آگهی‌ها'||a.category===active)&&(!q||(a.title+' '+a.description+' '+a.city+' '+a.category).toLowerCase().includes(q)));
+let s=document.getElementById('sort').value;if(s==='cheap')ads.sort((a,b)=>(a.price||0)-(b.price||0));else if(s==='expensive')ads.sort((a,b)=>(b.price||0)-(a.price||0));else ads.sort((a,b)=>b.date-a.date);
+document.getElementById('cards').innerHTML=ads.length?ads.map(a=>`<article class="listing"><div class="photo">${a.image?`<img src="${a.image}" alt="">`:'🛍️'}</div><div class="listing-body"><div class="hint">${a.category}</div><h3>${escapeHtml(a.title)}</h3><div class="price">${money(a.price)}</div><div class="meta"><span>📍 ${escapeHtml(a.city)}</span><span>${new Date(a.date).toLocaleDateString('fa-IR')}</span></div><p class="desc">${escapeHtml(a.description||'بدون توضیحات')}</p>${a.userAdded?`<button class="btn outline" onclick="deleteAd(${a.id})">حذف آگهی من</button>`:''}</div></article>`).join(''):'<div class="empty">آگهی‌ای پیدا نشد.<br>می‌توانید اولین آگهی را ثبت کنید.</div>';
+}
+function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function openModal(){document.getElementById('modal').classList.add('show')}
+function closeModal(){document.getElementById('modal').classList.remove('show')}
+async function saveAd(e){e.preventDefault();let file=document.getElementById('image').files[0],img='';
+if(file){if(file.size>1024*1024){toast('حجم تصویر باید کمتر از ۱ مگابایت باشد.');return}img=await new Promise((res,rej)=>{let r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file)})}
+let ads=getAds();ads.unshift({id:Date.now(),title:document.getElementById('title').value.trim(),category:document.getElementById('category').value,price:Number(document.getElementById('price').value)||0,city:document.getElementById('city').value.trim(),description:document.getElementById('description').value.trim(),image:img,date:Date.now(),userAdded:true});setAds(ads);document.getElementById('adForm').reset();closeModal();render();toast('آگهی در همین مرورگر ذخیره شد.')}
+function deleteAd(id){if(!confirm('این آگهی حذف شود؟'))return;setAds(getAds().filter(a=>a.id!==id));render();toast('آگهی حذف شد.')}
+render();
+</script>
+</body></html>
