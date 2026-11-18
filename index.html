@@ -59,43 +59,90 @@ footer{border-top:1px solid var(--line);background:#fff;padding:22px 0;color:var
 <div class="field"><label>تصویر آگهی (اختیاری، حداکثر ۱ مگابایت)</label><input id="image" type="file" accept="image/*"><div class="hint">برای عملکرد بهتر، تصویر کم‌حجم انتخاب کنید.</div></div>
 <button class="btn primary" type="submit" style="width:100%">ثبت آگهی</button>
 </form></div></div>
-<div class="modal-back" id="detailModal" onclick="if(event.target===this)closeDetail()"><div class="modal"><div class="modal-head"><h2 id="detailTitle">جزئیات آگهی</h2><button class="close" onclick="closeDetail()">×</button></div><div id="detailContent"></div></div></div><div class="modal-back" id="accountModal" onclick="if(event.target===this)closeAccount()"><div class="modal"><div class="modal-head"><h2 id="accountHeading">ورود / ثبت‌نام</h2><button class="close" onclick="closeAccount()">×</button></div><p class="hint">این بخش در نسخه نمایشی است؛ هنوز ورود امن و آنلاین فعال نشده.</p><form id="accountForm" onsubmit="demoAccount(event)"><div class="field"><label>نام</label><input id="accountName" maxlength="50" placeholder="نام شما"></div><div class="field"><label>ایمیل</label><input id="accountEmail" type="email" required placeholder="name@example.com"></div><button class="btn primary" type="submit" style="width:100%">ادامه</button></form><div id="accountInfo" style="display:none"><div class="notice" id="accountStatus"></div><button class="btn light" onclick="showMyAds()" style="width:100%;margin-top:10px">آگهی‌های من</button><button class="btn outline" onclick="demoLogout()" style="width:100%;margin-top:8px">خروج از حساب نمایشی</button></div></div></div><div class="toast" id="toast"></div>
+<div class="modal-back" id="detailModal" onclick="if(event.target===this)closeDetail()"><div class="modal"><div class="modal-head"><h2 id="detailTitle">جزئیات آگهی</h2><button class="close" onclick="closeDetail()">×</button></div><div id="detailContent"></div></div></div><div class="modal-back" id="accountModal" onclick="if(event.target===this)closeAccount()"><div class="modal"><div class="modal-head"><h2 id="accountHeading">ورود / ثبت‌نام</h2><button class="close" onclick="closeAccount()">×</button></div><p class="hint">با ایمیل و رمز عبور ثبت‌نام کنید یا وارد حساب خود شوید.</p><form id="accountForm" onsubmit="handleAuth(event)"><div class="field"><label>نام (برای ثبت‌نام)</label><input id="accountName" maxlength="50" placeholder="نام شما"></div><div class="field"><label>ایمیل</label><input id="accountEmail" type="email" required placeholder="name@example.com"></div><div class="field"><label>رمز عبور</label><input id="accountPassword" type="password" minlength="6" required placeholder="حداقل ۶ نویسه"></div><button class="btn primary" type="submit" style="width:100%">ورود / ثبت‌نام</button></form><div id="accountInfo" style="display:none"><div class="notice" id="accountStatus"></div><button class="btn light" onclick="showMyAds()" style="width:100%;margin-top:10px">آگهی‌های من</button><button class="btn outline" onclick="demoLogout()" style="width:100%;margin-top:8px">خروج از حساب نمایشی</button></div></div></div><div class="toast" id="toast"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+const SUPABASE_URL='https://zfenskabbrhssqxxcasw.supabase.co';
+const SUPABASE_KEY='sb_publishable_4vcGwG6QhV5gTaJWyIwckQ_NQ2nK6Kq';
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const categories=['همه آگهی‌ها','کالای دیجیتال','خانه و آشپزخانه','خودرو و وسایل نقلیه','املاک','خدمات','وسایل شخصی','سایر'];
-let active='همه آگهی‌ها';
+let active='همه آگهی‌ها', remoteAds=[];
 const starter=[
-{id:1,title:'نمونه آگهی: گوشی هوشمند',category:'کالای دیجیتال',price:8500000,city:'اراک',description:'این یک آگهی نمونه است. برای ثبت آگهی واقعی، روی دکمه ثبت آگهی بزنید.',date:Date.now()-1000},
-{id:2,title:'نمونه آگهی: خدمات فنی',category:'خدمات',price:0,city:'تهران',description:'ارائه خدمات و انجام کارهای فنی. این آگهی صرفاً برای نمایش ظاهر سایت است.',date:Date.now()-2000}
+{id:'sample1',title:'نمونه آگهی: گوشی هوشمند',category:'کالای دیجیتال',price:8500000,city:'اراک',description:'این آگهی نمونه است؛ آگهی‌های واقعی پس از ثبت در پایگاه داده نمایش داده می‌شوند.',created_at:new Date(Date.now()-1000).toISOString()},
+{id:'sample2',title:'نمونه آگهی: خدمات فنی',category:'خدمات',price:0,city:'تهران',description:'این آگهی صرفاً برای نمایش ظاهر سایت است.',created_at:new Date(Date.now()-2000).toISOString()}
 ];
-function getAds(){try{return JSON.parse(localStorage.getItem('agahino_ads'))||starter}catch(e){return starter}}
-function setAds(a){try{localStorage.setItem('agahino_ads',JSON.stringify(a));return true}catch(e){toast('فضای ذخیره‌سازی مرورگر کافی نیست. تصویر کوچک‌تری انتخاب کنید یا چند آگهی را حذف کنید.');return false}}
 function money(n){return n?Number(n).toLocaleString('fa-IR')+' تومان':'توافقی'}
-function toast(t){let e=document.getElementById('toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2600)}
-function renderChips(){document.getElementById('chips').innerHTML=categories.map(c=>`<button class="chip ${active===c?'active':''}" onclick="active=${JSON.stringify(c)};render()">${c}</button>`).join('')}
-function render(){
-renderChips();let q=document.getElementById('search').value.trim().toLowerCase(),ads=getAds();
-ads=ads.filter(a=>(active==='همه آگهی‌ها'||a.category===active)&&(!q||(a.title+' '+a.description+' '+a.city+' '+a.category).toLowerCase().includes(q)));
-let s=document.getElementById('sort').value;if(s==='cheap')ads.sort((a,b)=>(a.price||0)-(b.price||0));else if(s==='expensive')ads.sort((a,b)=>(b.price||0)-(a.price||0));else ads.sort((a,b)=>b.date-a.date);
-document.getElementById('cards').innerHTML=ads.length?ads.map(a=>`<article class="listing"><div class="photo">${a.image?`<img src="${a.image}" alt="">`:'🛍️'}</div><div class="listing-body"><div class="hint">${a.category}</div><h3>${escapeHtml(a.title)}</h3><div class="price">${money(a.price)}</div><div class="meta"><span>📍 ${escapeHtml(a.city)}</span><span>${new Date(a.date).toLocaleDateString('fa-IR')}</span></div><p class="desc">${escapeHtml(a.description||'بدون توضیحات')}</p><button class="btn light detail-btn" onclick="showAdDetail(${a.id})">مشاهده جزئیات</button>${a.userAdded?`<button class="btn outline detail-btn" onclick="deleteAd(${a.id})">حذف آگهی من</button>`:''}</div></article>`).join(''):'<div class="empty">آگهی‌ای پیدا نشد.<br>می‌توانید اولین آگهی را ثبت کنید.</div>';
-}
+function toast(t){let e=document.getElementById('toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),3000)}
 function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-const ACCOUNT_KEY='agahino_demo_account';
-function getAccount(){try{return JSON.parse(localStorage.getItem(ACCOUNT_KEY)||'null')}catch(e){return null}}
-function updateAccountButton(){const a=getAccount(),b=document.getElementById('accountBtn');if(b)b.textContent=a?(a.name||a.email.split('@')[0]):'ورود / ثبت‌نام'}
-function openAccount(){const a=getAccount();document.getElementById('accountForm').style.display=a?'none':'block';document.getElementById('accountInfo').style.display=a?'block':'none';document.getElementById('accountHeading').textContent=a?'حساب نمایشی شما':'ورود / ثبت‌نام';if(a)document.getElementById('accountStatus').textContent='وارد شده به‌صورت آزمایشی: '+(a.name||a.email);document.getElementById('accountModal').classList.add('show')}
+function currentUser(){return window.currentAgahinoUser||null}
+function renderChips(){document.getElementById('chips').innerHTML=categories.map(c=>'<button class="chip '+(active===c?'active':'')+'" onclick="active='+JSON.stringify(c)+';render()">'+c+'</button>').join('')}
+function render(){
+ renderChips();let q=document.getElementById('search').value.trim().toLowerCase(),ads=remoteAds.length?remoteAds.slice():starter.slice();
+ ads=ads.filter(a=>(active==='همه آگهی‌ها'||a.category===active)&&(!q||(a.title+' '+a.description+' '+a.city+' '+a.category).toLowerCase().includes(q)));
+ let s=document.getElementById('sort').value;if(s==='cheap')ads.sort((a,b)=>(a.price||0)-(b.price||0));else if(s==='expensive')ads.sort((a,b)=>(b.price||0)-(a.price||0));else ads.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+ document.getElementById('cards').innerHTML=ads.length?ads.map(a=>'<article class="listing"><div class="photo">'+(a.image_url?'<img src="'+escapeHtml(a.image_url)+'" alt="">':'🛍️')+'</div><div class="listing-body"><div class="hint">'+escapeHtml(a.category)+'</div><h3>'+escapeHtml(a.title)+'</h3><div class="price">'+money(a.price)+'</div><div class="meta"><span>📍 '+escapeHtml(a.city)+'</span><span>'+new Date(a.created_at).toLocaleDateString('fa-IR')+'</span></div><p class="desc">'+escapeHtml(a.description||'بدون توضیحات')+'</p><button class="btn light detail-btn" onclick="showAdDetail(\''+a.id+'\')">مشاهده جزئیات</button></div></article>').join(''):'<div class="empty">آگهی‌ای پیدا نشد.<br>می‌توانید اولین آگهی را ثبت کنید.</div>';
+}
+async function loadAds(){
+ const {data,error}=await db.from('ads').select('*').eq('status','published').order('created_at',{ascending:false});
+ if(error){console.error(error);toast('دریافت آگهی‌ها با خطا روبه‌رو شد.');return}
+ remoteAds=(data||[]).map(a=>({...a,date:new Date(a.created_at).getTime()}));render();
+}
+function updateAccountButton(){const u=currentUser(),b=document.getElementById('accountBtn');if(b)b.textContent=u?(u.user_metadata?.name||u.email||'حساب من'):'ورود / ثبت‌نام'}
+async function refreshSession(){
+ const {data}=await db.auth.getSession();window.currentAgahinoUser=data.session?.user||null;updateAccountButton();
+}
+function openAccount(){const u=currentUser();document.getElementById('accountForm').style.display=u?'none':'block';document.getElementById('accountInfo').style.display=u?'block':'none';document.getElementById('accountHeading').textContent=u?'حساب کاربری شما':'ورود / ثبت‌نام';if(u)document.getElementById('accountStatus').textContent='وارد شده‌اید: '+(u.email||'');document.getElementById('accountModal').classList.add('show')}
 function closeAccount(){document.getElementById('accountModal').classList.remove('show')}
-function demoAccount(e){e.preventDefault();const email=document.getElementById('accountEmail').value.trim().toLowerCase(),name=document.getElementById('accountName').value.trim();localStorage.setItem(ACCOUNT_KEY,JSON.stringify({name,email}));updateAccountButton();openAccount();toast('حساب نمایشی ساخته شد؛ ورود آنلاین هنوز فعال نیست.')}
-function demoLogout(){localStorage.removeItem(ACCOUNT_KEY);updateAccountButton();closeAccount();active='همه آگهی‌ها';render();toast('از حساب نمایشی خارج شدید.')}
-function showMyAds(){const a=getAccount();if(!a){toast('ابتدا وارد حساب نمایشی شوید.');return}active='همه آگهی‌ها';document.getElementById('search').value='';const owned=getAds().filter(x=>x.ownerEmail===a.email);document.getElementById('cards').innerHTML=owned.length?owned.map(x=>'<article class="listing"><div class="listing-body"><h3>'+escapeHtml(x.title)+'</h3><div class="price">'+money(x.price)+'</div><p>'+escapeHtml(x.city)+'</p><button class="btn outline detail-btn" onclick="deleteAd('+x.id+')">حذف آگهی</button></div></article>').join(''):'<div class="empty">هنوز آگهی‌ای به این حساب نمایشی نسبت داده نشده است.</div>';closeAccount();document.getElementById('cards').scrollIntoView({behavior:'smooth'})}
-function showAdDetail(id){const a=getAds().find(x=>x.id===id);if(!a)return;document.getElementById('detailTitle').textContent=a.title;document.getElementById('detailContent').innerHTML=`<div class="photo" style="height:220px;margin:12px 0;border-radius:12px;overflow:hidden">${a.image?`<img src="${a.image}" alt="">`:'🛍️'}</div><div class="hint">${escapeHtml(a.category)}</div><div class="price" style="font-size:20px">${money(a.price)}</div><p><b>شهر:</b> ${escapeHtml(a.city)}</p><p><b>تاریخ ثبت:</b> ${new Date(a.date).toLocaleDateString('fa-IR')}</p><p style="white-space:pre-wrap">${escapeHtml(a.description||'بدون توضیحات')}</p><div class="notice">اطلاعات تماس و پیام به فروشنده در نسخه‌های بعدی اضافه می‌شود.</div>`;document.getElementById('detailModal').classList.add('show')}
+async function handleAuth(e){
+ e.preventDefault();const email=document.getElementById('accountEmail').value.trim().toLowerCase(),password=document.getElementById('accountPassword').value,name=document.getElementById('accountName').value.trim(),btn=e.submitter;
+ btn.disabled=true;
+ try{
+  let result;
+  if(name) result=await db.auth.signUp({email,password,options:{data:{name}}});
+  else result=await db.auth.signInWithPassword({email,password});
+  if(result.error)throw result.error;
+  if(result.data.session){window.currentAgahinoUser=result.data.user;updateAccountButton();closeAccount();toast('با موفقیت وارد شدید.');await loadAds();}
+  else toast('ثبت‌نام انجام شد. ایمیل خود را برای تأیید حساب بررسی کنید؛ سپس وارد شوید.');
+ }catch(err){toast('خطا: '+(err.message||'عملیات انجام نشد'))}
+ finally{btn.disabled=false}
+}
+async function demoLogout(){await db.auth.signOut();window.currentAgahinoUser=null;updateAccountButton();closeAccount();toast('از حساب خارج شدید.');await loadAds()}
+async function showMyAds(){
+ const u=currentUser();if(!u){toast('ابتدا وارد حساب کاربری شوید.');return}
+ const {data,error}=await db.from('ads').select('*').eq('user_id',u.id).order('created_at',{ascending:false});
+ if(error){toast('دریافت آگهی‌های شما انجام نشد: '+error.message);return}
+ document.getElementById('cards').innerHTML=data.length?data.map(x=>'<article class="listing"><div class="listing-body"><h3>'+escapeHtml(x.title)+'</h3><div class="price">'+money(x.price)+'</div><p>'+escapeHtml(x.city)+' — '+escapeHtml(x.status)+'</p><button class="btn outline detail-btn" onclick="deleteAd(\''+x.id+'\')">حذف آگهی</button></div></article>').join(''):'<div class="empty">هنوز آگهی‌ای ثبت نکرده‌اید.</div>';
+ closeAccount();document.getElementById('cards').scrollIntoView({behavior:'smooth'});
+}
+async function showAdDetail(id){
+ const a=remoteAds.find(x=>x.id===id);if(!a)return;document.getElementById('detailTitle').textContent=a.title;
+ document.getElementById('detailContent').innerHTML='<div class="photo" style="height:220px;margin:12px 0;border-radius:12px;overflow:hidden">'+(a.image_url?'<img src="'+escapeHtml(a.image_url)+'" alt="">':'🛍️')+'</div><div class="hint">'+escapeHtml(a.category)+'</div><div class="price" style="font-size:20px">'+money(a.price)+'</div><p><b>شهر:</b> '+escapeHtml(a.city)+'</p><p><b>تاریخ ثبت:</b> '+new Date(a.created_at).toLocaleDateString('fa-IR')+'</p><p style="white-space:pre-wrap">'+escapeHtml(a.description||'بدون توضیحات')+'</p>';
+ document.getElementById('detailModal').classList.add('show')
+}
 function closeDetail(){document.getElementById('detailModal').classList.remove('show')}
-function openModal(){document.getElementById('modal').classList.add('show')}
+function openModal(){if(!currentUser()){toast('برای ثبت آگهی ابتدا وارد حساب کاربری شوید.');openAccount();return}document.getElementById('modal').classList.add('show')}
 function closeModal(){document.getElementById('modal').classList.remove('show')}
-async function saveAd(e){e.preventDefault();let file=document.getElementById('image').files[0],img='';
-if(file){if(file.size>1024*1024){toast('حجم تصویر باید کمتر از ۱ مگابایت باشد.');return}img=await new Promise((res,rej)=>{let r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file)})}
-let ads=getAds(),account=getAccount();ads.unshift({id:Date.now(),title:document.getElementById('title').value.trim(),category:document.getElementById('category').value,price:Number(document.getElementById('price').value)||0,city:document.getElementById('city').value.trim(),description:document.getElementById('description').value.trim(),image:img,date:Date.now(),userAdded:true,ownerEmail:account?account.email:null});if(!setAds(ads))return;document.getElementById('adForm').reset();closeModal();render();toast('آگهی در همین مرورگر ذخیره شد.')}
-function deleteAd(id){if(!confirm('این آگهی حذف شود؟'))return;if(!setAds(getAds().filter(a=>a.id!==id)))return;render();toast('آگهی حذف شد.')}
-render();updateAccountButton();
+async function saveAd(e){
+ e.preventDefault();const u=currentUser();if(!u){toast('ابتدا وارد حساب شوید.');return}
+ const btn=e.submitter;btn.disabled=true;
+ try{
+  let image_path=null,image_url=null,file=document.getElementById('image').files[0];
+  if(file){
+   if(file.size>5*1024*1024)throw new Error('حجم تصویر باید کمتر از ۵ مگابایت باشد.');
+   if(!['image/jpeg','image/png','image/webp'].includes(file.type))throw new Error('فرمت تصویر باید JPG، PNG یا WebP باشد.');
+   image_path=u.id+'/'+Date.now()+'-'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+   const up=await db.storage.from('ad-images').upload(image_path,file,{upsert:false});if(up.error)throw up.error;
+   image_url=db.storage.from('ad-images').getPublicUrl(image_path).data.publicUrl;
+  }
+  const row={user_id:u.id,title:document.getElementById('title').value.trim(),category:document.getElementById('category').value,price:Number(document.getElementById('price').value)||0,city:document.getElementById('city').value.trim(),description:document.getElementById('description').value.trim(),image_path,image_url,status:'published'};
+  const {error}=await db.from('ads').insert(row);if(error)throw error;
+  document.getElementById('adForm').reset();closeModal();await loadAds();toast('آگهی در آگهینو ثبت و برای دیگران قابل مشاهده شد.');
+ }catch(err){toast('ثبت آگهی انجام نشد: '+(err.message||''))}
+ finally{btn.disabled=false}
+}
+async function deleteAd(id){if(!confirm('این آگهی حذف شود؟'))return;const {error}=await db.from('ads').delete().eq('id',id);if(error){toast('حذف انجام نشد: '+error.message);return}await loadAds();showMyAds();toast('آگهی حذف شد.')}
+render();refreshSession().then(loadAds);
+db.auth.onAuthStateChange((_event,session)=>{window.currentAgahinoUser=session?.user||null;updateAccountButton();loadAds()});
 if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}
 </script>
 </body></html>
