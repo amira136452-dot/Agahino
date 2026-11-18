@@ -66,7 +66,7 @@ const SUPABASE_URL='https://zfenskabbrhssqxxcasw.supabase.co';
 const SUPABASE_KEY='sb_publishable_4vcGwG6QhV5gTaJWyIwckQ_NQ2nK6Kq';
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const categories=['همه آگهی‌ها','کالای دیجیتال','خانه و آشپزخانه','خودرو و وسایل نقلیه','املاک','خدمات','وسایل شخصی','سایر'];
-let active='همه آگهی‌ها', remoteAds=[];
+let active='همه آگهی‌ها', remoteAds=[], adsLoaded=false;
 const starter=[
 {id:'sample1',title:'نمونه آگهی: گوشی هوشمند',category:'کالای دیجیتال',price:8500000,city:'اراک',description:'این آگهی نمونه است؛ آگهی‌های واقعی پس از ثبت در پایگاه داده نمایش داده می‌شوند.',created_at:new Date(Date.now()-1000).toISOString()},
 {id:'sample2',title:'نمونه آگهی: خدمات فنی',category:'خدمات',price:0,city:'تهران',description:'این آگهی صرفاً برای نمایش ظاهر سایت است.',created_at:new Date(Date.now()-2000).toISOString()}
@@ -77,7 +77,7 @@ function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;',
 function currentUser(){return window.currentAgahinoUser||null}
 function renderChips(){document.getElementById('chips').innerHTML=categories.map(c=>'<button class="chip '+(active===c?'active':'')+'" onclick="active='+JSON.stringify(c)+';render()">'+c+'</button>').join('')}
 function render(){
- renderChips();let q=document.getElementById('search').value.trim().toLowerCase(),ads=remoteAds.length?remoteAds.slice():starter.slice();
+ renderChips();let q=document.getElementById('search').value.trim().toLowerCase(),ads=adsLoaded?remoteAds.slice():starter.slice();
  ads=ads.filter(a=>(active==='همه آگهی‌ها'||a.category===active)&&(!q||(a.title+' '+a.description+' '+a.city+' '+a.category).toLowerCase().includes(q)));
  let s=document.getElementById('sort').value;if(s==='cheap')ads.sort((a,b)=>(a.price||0)-(b.price||0));else if(s==='expensive')ads.sort((a,b)=>(b.price||0)-(a.price||0));else ads.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
  document.getElementById('cards').innerHTML=ads.length?ads.map(a=>'<article class="listing"><div class="photo">'+(a.image_url?'<img src="'+escapeHtml(a.image_url)+'" alt="">':'🛍️')+'</div><div class="listing-body"><div class="hint">'+escapeHtml(a.category)+'</div><h3>'+escapeHtml(a.title)+'</h3><div class="price">'+money(a.price)+'</div><div class="meta"><span>📍 '+escapeHtml(a.city)+'</span><span>'+new Date(a.created_at).toLocaleDateString('fa-IR')+'</span></div><p class="desc">'+escapeHtml(a.description||'بدون توضیحات')+'</p><button class="btn light detail-btn" onclick="showAdDetail(\''+a.id+'\')">مشاهده جزئیات</button></div></article>').join(''):'<div class="empty">آگهی‌ای پیدا نشد.<br>می‌توانید اولین آگهی را ثبت کنید.</div>';
@@ -85,7 +85,7 @@ function render(){
 async function loadAds(){
  const {data,error}=await db.from('ads').select('*').eq('status','published').order('created_at',{ascending:false});
  if(error){console.error(error);toast('دریافت آگهی‌ها با خطا روبه‌رو شد.');return}
- remoteAds=(data||[]).map(a=>({...a,date:new Date(a.created_at).getTime()}));render();
+ remoteAds=(data||[]).map(a=>({...a,date:new Date(a.created_at).getTime()}));adsLoaded=true;render();
 }
 function updateAccountButton(){const u=currentUser(),b=document.getElementById('accountBtn');if(b)b.textContent=u?(u.user_metadata?.name||u.email||'حساب من'):'ورود / ثبت‌نام'}
 async function refreshSession(){
