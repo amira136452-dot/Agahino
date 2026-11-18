@@ -1,0 +1,20 @@
+{
+  "name": "آگهینو | بازار خرید و فروش و خدمات",
+  "short_name": "آگهینو",
+  "lang": "fa",
+  "dir": "rtl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f8fc",
+  "theme_color": "#155eef",
+  "description": "ثبت و مشاهده آگهی‌های خرید، فروش کالا و خدمات",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
