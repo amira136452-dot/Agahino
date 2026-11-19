@@ -42,7 +42,7 @@ footer{border-top:1px solid var(--line);background:#fff;padding:22px 0;color:var
 <div class="layout">
 <aside class="sidebar">
 <div class="panel"><h3>ثبت سریع آگهی</h3><p class="hint">برای شروع، آگهی خود را ثبت کنید.</p><button class="btn primary" style="width:100%" onclick="openModal()">＋ ثبت آگهی جدید</button>
-<div class="notice">نسخه آزمایشی آگهینو: آگهی‌ها فعلاً فقط در همین مرورگر ذخیره می‌شوند و هنوز برای کاربران دیگر قابل مشاهده نیستند. در صورت نصب سایت، پوسته آن پس از اولین بازدید می‌تواند آفلاین هم باز شود.</div>
+<div class="notice">آگهینو به پایگاه داده مرکزی متصل شده است. پس از ورود به حساب کاربری، آگهی‌های منتشرشده در سایت ذخیره می‌شوند و برای دیگر کاربران نیز قابل مشاهده خواهند بود. برای ثبت آگهی و بارگذاری تصویر، اتصال اینترنت لازم است.</div>
 </div></aside>
 <section><div class="feed-head"><h2 style="margin:0;font-size:20px">آگهی‌های تازه</h2><select id="sort" onchange="render()"><option value="new">جدیدترین</option><option value="cheap">ارزان‌ترین</option><option value="expensive">گران‌ترین</option></select></div>
 <div class="cards" id="cards"></div></section>
@@ -56,7 +56,7 @@ footer{border-top:1px solid var(--line);background:#fff;padding:22px 0;color:var
 <div class="field"><label>قیمت (تومان)</label><input id="price" type="number" min="0" placeholder="برای توافقی خالی بگذارید"></div>
 <div class="field"><label>شهر *</label><input id="city" required placeholder="مثلاً اراک"></div>
 <div class="field"><label>توضیحات</label><textarea id="description" maxlength="500" placeholder="جزئیات کالا یا خدمات را بنویسید..."></textarea></div>
-<div class="field"><label>تصویر آگهی (اختیاری، حداکثر ۱ مگابایت)</label><input id="image" type="file" accept="image/*"><div class="hint">برای عملکرد بهتر، تصویر کم‌حجم انتخاب کنید.</div></div>
+<div class="field"><label>تصویر آگهی (اختیاری، حداکثر ۵ مگابایت)</label><input id="image" type="file" accept="image/*"><div class="hint">برای عملکرد بهتر، تصویر کم‌حجم انتخاب کنید.</div></div>
 <button class="btn primary" type="submit" style="width:100%">ثبت آگهی</button>
 </form></div></div>
 <div class="modal-back" id="detailModal" onclick="if(event.target===this)closeDetail()"><div class="modal"><div class="modal-head"><h2 id="detailTitle">جزئیات آگهی</h2><button class="close" onclick="closeDetail()">×</button></div><div id="detailContent"></div></div></div><div class="modal-back" id="accountModal" onclick="if(event.target===this)closeAccount()"><div class="modal"><div class="modal-head"><h2 id="accountHeading">ورود / ثبت‌نام</h2><button class="close" onclick="closeAccount()">×</button></div><p class="hint">با ایمیل و رمز عبور ثبت‌نام کنید یا وارد حساب خود شوید.</p><form id="accountForm" onsubmit="handleAuth(event)"><div class="field"><label>نام (برای ثبت‌نام)</label><input id="accountName" maxlength="50" placeholder="نام شما"></div><div class="field"><label>ایمیل</label><input id="accountEmail" type="email" required placeholder="name@example.com"></div><div class="field"><label>رمز عبور</label><input id="accountPassword" type="password" minlength="6" required placeholder="حداقل ۶ نویسه"></div><button class="btn primary" type="submit" style="width:100%">ورود / ثبت‌نام</button></form><div id="accountInfo" style="display:none"><div class="notice" id="accountStatus"></div><button class="btn light" onclick="showMyAds()" style="width:100%;margin-top:10px">آگهی‌های من</button><button class="btn outline" onclick="demoLogout()" style="width:100%;margin-top:8px">خروج از حساب نمایشی</button></div></div></div><div class="toast" id="toast"></div>
