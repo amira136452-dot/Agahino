@@ -11,6 +11,7 @@ create table if not exists public.ads (
   city text not null,
   description text not null default '',
   image_path text,
+  image_url text,
   status text not null default 'published'
     check (status in ('draft', 'published', 'sold', 'archived')),
   created_at timestamptz not null default now(),
