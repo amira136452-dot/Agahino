@@ -25,26 +25,43 @@ create index if not exists ads_user_id_created_at_idx
 
 alter table public.ads enable row level security;
 
+create or replace function public.set_ads_updated_at()
+returns trigger
+language plpgsql
+set search_path = ''
+as $
+begin
+  new.updated_at = now();
+  return new;
+end;
+$;
+
+drop trigger if exists ads_set_updated_at on public.ads;
+create trigger ads_set_updated_at
+before update on public.ads
+for each row execute function public.set_ads_updated_at();
+
+
 drop policy if exists "Anyone can view published ads" on public.ads;
 create policy "Anyone can view published ads"
   on public.ads for select
-  using (status = 'published' or auth.uid() = user_id);
+  using (status = 'published' or (select auth.uid()) = user_id);
 
 drop policy if exists "Users can insert their own ads" on public.ads;
 create policy "Users can insert their own ads"
   on public.ads for insert to authenticated
-  with check (auth.uid() = user_id);
+  with check ((select auth.uid()) = user_id);
 
 drop policy if exists "Users can update their own ads" on public.ads;
 create policy "Users can update their own ads"
   on public.ads for update to authenticated
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id)
+  with check ((select auth.uid()) = user_id);
 
 drop policy if exists "Users can delete their own ads" on public.ads;
 create policy "Users can delete their own ads"
   on public.ads for delete to authenticated
-  using (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id);
 
 -- فضای ذخیره‌سازی عکس آگهی‌ها؛ خواندن عمومی، بارگذاری فقط در پوشه شناسه خود کاربر.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
