@@ -1,17 +1,17 @@
--- آگهینو: راه‌اندازی پایگاه داده در Supabase
--- این فایل را فقط یک بار در بخش SQL Editor پروژه Supabase اجرا کنید.
--- هرگز کلید service_role را در سایت یا GitHub قرار ندهید.
+-- آگهینو: راه‌اندازی امن و تکرارپذیر پایگاه داده در Supabase
+-- این فایل برای پروژه تازه است؛ روی پروژه فعال فقط در صورت نیاز و با بررسی قبلی اجرا شود.
+-- هرگز کلید service_role یا secret را در سایت یا GitHub قرار ندهید.
 
 create extension if not exists pgcrypto;
 
 create table if not exists public.ads (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
-  title text not null check (char_length(title) between 2 and 70),
+  title text not null check (char_length(title) between 3 and 120),
   category text not null,
-  price bigint check (price is null or price >= 0),
+  price numeric(14,2),
   city text not null,
-  description text not null default '' check (char_length(description) <= 500),
+  description text not null default '',
   image_path text,
   image_url text,
   status text not null default 'published'
@@ -22,12 +22,13 @@ create table if not exists public.ads (
 
 create index if not exists ads_status_created_at_idx
   on public.ads (status, created_at desc);
-create index if not exists ads_city_idx on public.ads (city);
-create index if not exists ads_category_idx on public.ads (category);
+create index if not exists ads_user_id_created_at_idx
+  on public.ads (user_id, created_at desc);
 
-create or replace function public.set_updated_at()
+create or replace function public.set_ads_updated_at()
 returns trigger
 language plpgsql
+set search_path = ''
 as $$
 begin
   new.updated_at = now();
@@ -38,26 +39,9 @@ $$;
 drop trigger if exists ads_set_updated_at on public.ads;
 create trigger ads_set_updated_at
 before update on public.ads
-for each row execute function public.set_updated_at();
-
-alter table public.ads enable row level security;
-
-create or replace function public.set_ads_updated_at()
-returns trigger
-language plpgsql
-set search_path = ''
-as $
-begin
-  new.updated_at = now();
-  return new;
-end;
-$;
-
-drop trigger if exists ads_set_updated_at on public.ads;
-create trigger ads_set_updated_at
-before update on public.ads
 for each row execute function public.set_ads_updated_at();
 
+alter table public.ads enable row level security;
 
 drop policy if exists "Anyone can view published ads" on public.ads;
 create policy "Anyone can view published ads"
@@ -65,32 +49,30 @@ on public.ads for select
 using (status = 'published' or (select auth.uid()) = user_id);
 
 drop policy if exists "Users can create their own ads" on public.ads;
-create policy "Users can create their own ads"
-on public.ads for insert
-to authenticated
+drop policy if exists "Users can insert their own ads" on public.ads;
+create policy "Users can insert their own ads"
+on public.ads for insert to authenticated
 with check ((select auth.uid()) = user_id);
 
 drop policy if exists "Users can update their own ads" on public.ads;
 create policy "Users can update their own ads"
-on public.ads for update
-to authenticated
+on public.ads for update to authenticated
 using ((select auth.uid()) = user_id)
 with check ((select auth.uid()) = user_id);
 
 drop policy if exists "Users can delete their own ads" on public.ads;
 create policy "Users can delete their own ads"
-on public.ads for delete
-to authenticated
+on public.ads for delete to authenticated
 using ((select auth.uid()) = user_id);
 
--- فضای عمومی تصاویر آگهی
+-- فضای عمومی تصاویر؛ مشاهده عمومی، مدیریت فقط در پوشه اختصاصی هر کاربر.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('ad-images', 'ad-images', true, 5242880,
         array['image/jpeg', 'image/png', 'image/webp'])
 on conflict (id) do update
-set public = true,
-    file_size_limit = 5242880,
-    allowed_mime_types = array['image/jpeg', 'image/png', 'image/webp'];
+set public = excluded.public,
+    file_size_limit = excluded.file_size_limit,
+    allowed_mime_types = excluded.allowed_mime_types;
 
 drop policy if exists "Public can view ad images" on storage.objects;
 create policy "Public can view ad images"
@@ -98,35 +80,35 @@ on storage.objects for select
 using (bucket_id = 'ad-images');
 
 drop policy if exists "Users upload images to their own folder" on storage.objects;
-create policy "Users upload images to their own folder"
-on storage.objects for insert
-to authenticated
+drop policy if exists "Users can upload their own ad images" on storage.objects;
+create policy "Users can upload their own ad images"
+on storage.objects for insert to authenticated
 with check (
   bucket_id = 'ad-images'
-  and (storage.foldername(name))[1] = auth.uid()::text
+  and (storage.foldername(name))[1] = (select auth.uid())::text
 );
 
 drop policy if exists "Users update images in their own folder" on storage.objects;
-create policy "Users update images in their own folder"
-on storage.objects for update
-to authenticated
+drop policy if exists "Users can update their own ad images" on storage.objects;
+create policy "Users can update their own ad images"
+on storage.objects for update to authenticated
 using (
   bucket_id = 'ad-images'
-  and (storage.foldername(name))[1] = auth.uid()::text
+  and (storage.foldername(name))[1] = (select auth.uid())::text
 )
 with check (
   bucket_id = 'ad-images'
-  and (storage.foldername(name))[1] = auth.uid()::text
+  and (storage.foldername(name))[1] = (select auth.uid())::text
 );
 
 drop policy if exists "Users delete images in their own folder" on storage.objects;
-create policy "Users delete images in their own folder"
-on storage.objects for delete
-to authenticated
+drop policy if exists "Users can delete their own ad images" on storage.objects;
+create policy "Users can delete their own ad images"
+on storage.objects for delete to authenticated
 using (
   bucket_id = 'ad-images'
-  and (storage.foldername(name))[1] = auth.uid()::text
+  and (storage.foldername(name))[1] = (select auth.uid())::text
 );
 
--- نکته: این فایل فقط ساختار امن پایگاه داده و فضای تصویر را آماده می‌کند.
--- اتصال سایت به Supabase و افزودن ورود/ثبت‌نام کاربران، مرحله بعدی است.
+-- این فایل زیرساخت پایگاه داده و ذخیره تصویر را آماده می‌کند.
+-- اتصال Auth و فرم‌های سایت در index.html مدیریت می‌شوند.
