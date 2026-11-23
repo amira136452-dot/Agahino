@@ -156,29 +156,56 @@ function closeImageViewer(){document.getElementById('imageViewer').classList.rem
 function openModal(){if(!currentUser()){toast('برای ثبت آگهی ابتدا وارد حساب کاربری شوید.');openAccount();return}editingAdId=null;document.getElementById('adForm').reset();document.getElementById('modal').classList.add('show')}
 function closeModal(){document.getElementById('modal').classList.remove('show')}
 async function saveAd(e){
- e.preventDefault();const u=currentUser();if(!u){toast('ابتدا وارد حساب شوید.');return}
- const btn=e.submitter;const originalButtonText=btn.textContent;btn.disabled=true;btn.textContent='در حال ثبت آگهی…';
- const input=document.getElementById('image'),files=[...input.files];
- let uploaded=[];
+ e.preventDefault();
+ const form=e.currentTarget;
+ const u=currentUser();
+ if(!u){toast('ابتدا وارد حساب شوید.');return}
+ const btn=e.submitter||form.querySelector('button[type="submit"]');
+ const originalButtonText=btn?btn.textContent:'ثبت آگهی';
+ if(btn){btn.disabled=true;btn.textContent='در حال آماده‌سازی آگهی…'}
+ const input=document.getElementById('image');
+ const files=[...input.files];
+ const uploaded=[];
+ let step='بررسی اطلاعات فرم';
  try{
   if(files.length&&!document.getElementById('imageReviewed').checked)throw new Error('لطفاً همه عکس‌ها را پیش‌نمایش و تأیید کنید.');
   if(files.length>5)throw new Error('حداکثر ۵ عکس مجاز است.');
-  for(const file of files){
+  for(let i=0;i<files.length;i++){
+   const file=files[i];
    if(file.size>5*1024*1024)throw new Error('حجم هر عکس باید کمتر از ۵ مگابایت باشد.');
    if(!['image/jpeg','image/png','image/webp'].includes(file.type))throw new Error('فرمت عکس باید JPG، PNG یا WebP باشد.');
+   step='بارگذاری عکس '+(i+1)+' از '+files.length;
+   if(btn)btn.textContent='در حال بارگذاری عکس '+(i+1)+'…';
    const path=u.id+'/'+Date.now()+'-'+Math.random().toString(36).slice(2)+'-'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
-   const up=await db.storage.from('ad-images').upload(path,file,{upsert:false});if(up.error)throw up.error;
+   const up=await db.storage.from('ad-images').upload(path,file,{upsert:false});
+   if(up.error)throw up.error;
    uploaded.push({path,url:db.storage.from('ad-images').getPublicUrl(path).data.publicUrl});
   }
+  step='ذخیره اطلاعات آگهی';
+  if(btn)btn.textContent='در حال ذخیره آگهی…';
   const row={user_id:u.id,title:document.getElementById('title').value.trim(),category:document.getElementById('category').value,price:Number(document.getElementById('price').value)||0,province:document.getElementById('province').value,city:document.getElementById('city').value.trim(),description:document.getElementById('description').value.trim(),status:'pending_review'};
   if(files.length){row.images=uploaded;row.image_path=uploaded[0].path;row.image_url=uploaded[0].url}
   let result;
   if(editingAdId)result=await db.from('ads').update({...row,updated_at:new Date().toISOString()}).eq('id',editingAdId).eq('user_id',u.id);
   else result=await db.from('ads').insert(row);
   if(result.error)throw result.error;
-  editingAdId=null;document.getElementById('adForm').reset();removeSelectedImage();closeModal();await loadAds();document.getElementById('cards').scrollIntoView({behavior:'smooth',block:'start'});toast('آگهی ثبت شد و در صف بررسی اولیه قرار گرفت. انتشار خودکار پس از فعال‌شدن سامانه بررسی هوشمند انجام می‌شود.');
- }catch(err){if(uploaded.length)await db.storage.from('ad-images').remove(uploaded.map(x=>x.path));toast('ذخیره آگهی انجام نشد: '+(err.message||''))}
- finally{btn.disabled=false;btn.textContent=originalButtonText}
+  editingAdId=null;
+  form.reset();
+  removeSelectedImage();
+  closeModal();
+  step='به‌روزرسانی فهرست آگهی‌ها';
+  await loadAds();
+  document.getElementById('cards').scrollIntoView({behavior:'smooth',block:'start'});
+  toast('آگهی ثبت شد و در صف بررسی ناظر قرار گرفت.');
+ }catch(err){
+  if(uploaded.length){
+   try{await db.storage.from('ad-images').remove(uploaded.map(x=>x.path))}catch(cleanupError){console.warn('پاک‌سازی عکس‌های موقت انجام نشد:',cleanupError)}
+  }
+  console.error('Agahino saveAd failed at:',step,err);
+  toast('ثبت آگهی در مرحله «'+step+'» انجام نشد: '+(err.message||'خطای نامشخص'));
+ }finally{
+  if(btn){btn.disabled=false;btn.textContent=originalButtonText}
+ }
 }
 async function deleteAd(id){if(!confirm('این آگهی حذف شود؟'))return;const {data:ad,error:readError}=await db.from('ads').select('images,image_path').eq('id',id).eq('user_id',currentUser().id).single();if(readError||!ad){toast('آگهی پیدا نشد یا دسترسی ندارید.');return}const paths=[...(ad.images||[]).map(x=>x.path).filter(Boolean),ad.image_path].filter((p,i,a)=>a.indexOf(p)===i);if(paths.length){const removed=await db.storage.from('ad-images').remove(paths);if(removed.error){toast('پاک‌کردن تصاویر انجام نشد؛ آگهی حذف نشد.');return}}const {error}=await db.from('ads').delete().eq('id',id).eq('user_id',currentUser().id);if(error){toast('حذف انجام نشد: '+error.message);return}await loadAds();showMyAds();toast('آگهی حذف شد.')}
 document.getElementById('image').addEventListener('change',previewSelectedImage);
