@@ -167,7 +167,7 @@ async function showAdDetail(id){
 function closeDetail(){document.getElementById('detailModal').classList.remove('show')}
 function openImageViewer(url){const v=document.getElementById('imageViewer');document.getElementById('imageViewerImg').src=url;v.classList.add('show')}
 function closeImageViewer(){document.getElementById('imageViewer').classList.remove('show')}
-function openModal(){if(!currentUser()){toast('برای ثبت آگهی ابتدا وارد حساب کاربری شوید.');openAccount();return}editingAdId=null;document.getElementById('adForm').reset();document.getElementById('modal').classList.add('show')}
+function openModal(){if(!currentUser()){toast('برای ثبت آگهی ابتدا وارد حساب کاربری شوید.');openAccount();return}editingAdId=null;document.getElementById('adForm').reset();renderCategoryFields();updateVehicleModels();document.getElementById('modal').classList.add('show')}
 function closeModal(){document.getElementById('modal').classList.remove('show')}
 async function prepareImageForUpload(file){
  if(!file.type.startsWith('image/')||file.type==='image/gif')return file;
