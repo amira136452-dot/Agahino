@@ -17,10 +17,21 @@ let reviewer=null;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function say(s){document.getElementById('message').textContent=s}
 async function init(){
- const {data:{session}}=await db.auth.getSession();
+ let {data:{session}}=await db.auth.getSession();
  if(!session){say('برای ورود ناظر، ابتدا در صفحه اصلی آگهینو وارد حساب شوید.');document.getElementById('queue').innerHTML='<div class="denied"><a href="./">رفتن به آگهینو و ورود</a>؛ سپس دوباره پنل نظارت را باز کنید.</div>';return}
+ // نقش مدیر ممکن است پس از صدور توکن قبلی تنظیم شده باشد؛ توکن را تازه می‌کنیم.
+ const refreshed=await db.auth.refreshSession();
+ if(refreshed.data?.session) session=refreshed.data.session;
+ else {
+   const latest=await db.auth.getSession();
+   session=latest.data?.session||session;
+ }
  reviewer=session.user;
- if(reviewer.app_metadata?.role!=='admin'){say('این حساب دسترسی ناظر ندارد.');document.getElementById('queue').innerHTML='<div class="denied">دسترسی غیرمجاز. نقش ناظر باید از بخش امن مدیریت پروژه برای این حساب تعیین شود.</div>';return}
+ if(reviewer.app_metadata?.role!=='admin'){
+   say('نشست ورود هنوز دسترسی مدیر را دریافت نکرده است.');
+   document.getElementById('queue').innerHTML='<div class="denied">لطفاً یک‌بار از حساب خارج شوید، دوباره وارد شوید و پنل را باز کنید. <a href="./">بازگشت به آگهینو</a></div>';
+   return
+ }
  say('ورود ناظر تأیید شد.');await loadQueue();
 }
 async function loadQueue(){
