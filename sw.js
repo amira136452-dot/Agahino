@@ -1,5 +1,5 @@
-const CACHE_NAME = "agahino-shell-v8";
-const APP_FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon.svg"];
+const CACHE_NAME = "agahino-shell-v9";
+const APP_FILES = ["./", "./index.html", "./manifest.webmanifest", "./manifest-user.webmanifest", "./manifest-moderator.webmanifest", "./profile.html", "./admin.html", "./icon.svg"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_FILES)));
@@ -27,7 +27,7 @@ self.addEventListener("fetch", (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put("./index.html", copy));
           return response;
         })
-        .catch(() => caches.match("./index.html"))
+        .catch(() => caches.match(request).then((cached) => cached || caches.match("./index.html")) )
     );
     return;
   }
