@@ -123,7 +123,7 @@ async function showMyAds(){
  const u=currentUser();if(!u){toast('ابتدا وارد حساب کاربری شوید.');return}
  const {data,error}=await db.from('ads').select('*').eq('user_id',u.id).order('created_at',{ascending:false});
  if(error){toast('دریافت آگهی‌های شما انجام نشد: '+error.message);return}
- document.getElementById('cards').innerHTML=data.length?data.map(x=>'<article class="listing"><div class="listing-body"><h3>'+escapeHtml(x.title)+'</h3><div class="price">'+money(x.price)+'</div><p>'+escapeHtml(x.city)+' — <b>'+escapeHtml(adStatusLabel(x.status))+'</b></p><div class="top-actions"><button class="btn light detail-btn" onclick="editAd(\''+x.id+'\')">ویرایش</button><button class="btn outline detail-btn" onclick="toggleAdStatus(\''+x.id+'\',\''+x.status+'\')">'+(x.status==='sold'?'بازنشر آگهی':'علامت‌گذاری به‌عنوان فروخته‌شده')+'</button><button class="btn outline detail-btn" onclick="deleteAd(\''+x.id+'\')">حذف</button></div></div></article>').join(''):'<div class="empty">هنوز آگهی‌ای ثبت نکرده‌اید.</div>';
+ document.getElementById('cards').innerHTML=data.length?data.map(x=>'<article class="listing"><div class="listing-body"><h3>'+escapeHtml(x.title)+'</h3><div class="price">'+money(x.price)+'</div><p>'+escapeHtml(x.city)+' — <b>'+escapeHtml(adStatusLabel(x.status))+'</b></p><div class="top-actions"><button class="btn light detail-btn" onclick="editAd(\''+x.id+'\')">ویرایش</button><button class="btn outline detail-btn" onclick="toggleAdStatus(\''+x.id+'\',\''+x.status+'\')">'+(x.status==='sold'?'درخواست بازنشر و بررسی مجدد':'علامت‌گذاری به‌عنوان فروخته‌شده')+'</button><button class="btn outline detail-btn" onclick="deleteAd(\''+x.id+'\')">حذف</button></div></div></article>').join(''):'<div class="empty">هنوز آگهی‌ای ثبت نکرده‌اید.</div>';
  closeAccount();document.getElementById('cards').scrollIntoView({behavior:'smooth'});
 }
 async function editAd(id){
@@ -139,10 +139,10 @@ async function editAd(id){
 }
 async function toggleAdStatus(id,status){
  const u=currentUser();if(!u)return;
- const next=status==='sold'?'published':'sold';
+ const next=status==='sold'?'pending_review':'sold';
  const {error}=await db.from('ads').update({status:next,updated_at:new Date().toISOString()}).eq('id',id).eq('user_id',u.id);
  if(error){toast('تغییر وضعیت انجام نشد: '+error.message);return}
- toast(next==='sold'?'آگهی به‌عنوان فروخته‌شده علامت خورد.':'آگهی دوباره منتشر شد.');
+ toast(next==='sold'?'آگهی به‌عنوان فروخته‌شده علامت خورد.':'درخواست بازنشر ثبت شد و پس از بررسی دوباره تعیین وضعیت می‌شود.');
  await showMyAds();
 }
 async function showAdDetail(id){
@@ -176,7 +176,7 @@ async function saveAd(e){
   if(editingAdId)result=await db.from('ads').update({...row,updated_at:new Date().toISOString()}).eq('id',editingAdId).eq('user_id',u.id);
   else result=await db.from('ads').insert(row);
   if(result.error)throw result.error;
-  editingAdId=null;document.getElementById('adForm').reset();removeSelectedImage();closeModal();await loadAds();document.getElementById('cards').scrollIntoView({behavior:'smooth',block:'start'});toast('آگهی شما با موفقیت ثبت شد و اکنون در انتظار بررسی ناظر است. پس از تأیید منتشر می‌شود.');
+  editingAdId=null;document.getElementById('adForm').reset();removeSelectedImage();closeModal();await loadAds();document.getElementById('cards').scrollIntoView({behavior:'smooth',block:'start'});toast('آگهی ثبت شد و در صف بررسی اولیه قرار گرفت. انتشار خودکار پس از فعال‌شدن سامانه بررسی هوشمند انجام می‌شود.');
  }catch(err){if(uploaded.length)await db.storage.from('ad-images').remove(uploaded.map(x=>x.path));toast('ذخیره آگهی انجام نشد: '+(err.message||''))}
  finally{btn.disabled=false;btn.textContent=originalButtonText}
 }
