@@ -1,0 +1,16 @@
+{
+  "id": "./admin.html",
+  "name": "آگهینو | پنل ناظر",
+  "short_name": "پنل ناظر",
+  "lang": "fa",
+  "dir": "rtl",
+  "start_url": "./admin.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f7fb",
+  "theme_color": "#155eef",
+  "description": "بررسی و مدیریت آگهی‌های ارسالی به ناظر آگهینو",
+  "icons": [
+    { "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
