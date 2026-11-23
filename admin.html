@@ -51,8 +51,12 @@ async function decide(id,status){
  const note=document.getElementById('note-'+id).value.trim();
  if(status==='rejected'&&!note){alert('برای رد آگهی، دلیل را بنویسید.');return}
  if(status==='pending_review'&&!note){alert('لطفاً توضیح دهید چه اصلاحی لازم است.');return}
- const {error}=await db.from('ads').update({status,moderation_note:note,updated_at:new Date().toISOString()}).eq('id',id);
+ const update={status,moderation_note:note,updated_at:new Date().toISOString()};
+ if(status==='pending_review'){update.reviewed_at=null;update.reviewed_by=null;}
+ else{update.reviewed_at=new Date().toISOString();update.reviewed_by=reviewer.id;}
+ const {data,error}=await db.from('ads').update(update).eq('id',id).select('id').maybeSingle();
  if(error){alert('ثبت تصمیم انجام نشد: '+error.message);return}
+ if(!data){alert('هیچ آگهی‌ای تغییر نکرد؛ دسترسی یا وضعیت آگهی را بررسی کنید.');return}
  say('تصمیم ناظر ثبت شد.');await loadQueue();
 }
 async function logout(){await db.auth.signOut();location.href='./'}
