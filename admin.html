@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#155eef"><title>پنل نظارت آگهینو</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Tahoma,Arial,sans-serif;background:#f5f7fb;color:#182230;line-height:1.8}.wrap{max-width:1000px;margin:auto;padding:20px}.head,.card{background:#fff;border:1px solid #e4e7ec;border-radius:16px;padding:18px;margin-bottom:14px}.head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}h1{font-size:22px;margin:0}h2{font-size:18px;margin:0 0 8px}.muted{color:#667085;font-size:13px}.badge{display:inline-block;border-radius:20px;padding:3px 10px;font-size:12px;background:#fff4e5;color:#9a5700}.badge.clear{background:#ecfdf3;color:#067647}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:12px 0}.grid img{width:100%;height:160px;object-fit:contain;background:#f8fafc;border-radius:10px;cursor:zoom-in}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}button{border:0;border-radius:10px;padding:10px 14px;font:inherit;font-weight:700;cursor:pointer}.approve{background:#079455;color:white}.reject{background:#d92d20;color:white}.edit{background:#eef4ff;color:#155eef}.refresh{background:#f2f4f7;color:#344054}textarea{width:100%;min-height:72px;border:1px solid #d0d5dd;border-radius:10px;padding:10px;font:inherit}.empty{text-align:center;padding:35px;color:#667085;background:white;border-radius:14px}.denied{background:#fff4e5;color:#93370d;padding:16px;border-radius:12px}@media(max-width:500px){.wrap{padding:12px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style></head><body><main class="wrap">
+<header class="head"><div><h1>پنل نظارت آگهینو</h1><div class="muted">بررسی موارد ارجاع‌شده و تصمیم نهایی ناظر</div></div><div class="actions"><button class="refresh" onclick="loadQueue()">به‌روزرسانی</button><button class="refresh" onclick="logout()">خروج</button></div></header>
+<div id="message" class="muted">در حال بررسی دسترسی…</div><section id="queue"></section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>
+const SUPABASE_URL='https://zfenskabbrhssqxxcasw.supabase.co';
+const SUPABASE_KEY='sb_publishable_4vcGwG6QhV5gTaJWyIwckQ_NQ2nK6Kq';
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+let reviewer=null;
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function say(s){document.getElementById('message').textContent=s}
+async function init(){
+ const {data:{session}}=await db.auth.getSession();
+ if(!session){say('برای ورود ناظر، ابتدا در صفحه اصلی آگهینو وارد حساب شوید.');document.getElementById('queue').innerHTML='<div class="denied"><a href="./">رفتن به آگهینو و ورود</a>؛ سپس دوباره پنل نظارت را باز کنید.</div>';return}
+ reviewer=session.user;
+ if(reviewer.app_metadata?.role!=='admin'){say('این حساب دسترسی ناظر ندارد.');document.getElementById('queue').innerHTML='<div class="denied">دسترسی غیرمجاز. نقش ناظر باید از بخش امن مدیریت پروژه برای این حساب تعیین شود.</div>';return}
+ say('ورود ناظر تأیید شد.');await loadQueue();
+}
+async function loadQueue(){
+ if(!reviewer||reviewer.app_metadata?.role!=='admin')return;
+ say('در حال دریافت آگهی‌های نیازمند بررسی…');
+ const {data,error}=await db.from('ads').select('*').eq('status','pending_review').order('created_at',{ascending:true});
+ if(error){say('خطا در دریافت صف: '+error.message);return}
+ say('تعداد آگهی‌های در انتظار بررسی: '+(data||[]).length);
+ const root=document.getElementById('queue');
+ if(!data?.length){root.innerHTML='<div class="empty">فعلاً آگهی مشکوک یا ارجاع‌شده‌ای در صف نیست.</div>';return}
+ root.innerHTML=data.map(a=>{
+ const pics=(a.images?.length?a.images:(a.image_url?[{url:a.image_url}]:[]));
+ return '<article class="card"><h2>'+esc(a.title)+'</h2><div class="muted">'+esc(a.category)+' | '+esc(a.province||'')+'، '+esc(a.city)+' | '+new Date(a.created_at).toLocaleString('fa-IR')+'</div><p><b>قیمت:</b> '+(a.price?Number(a.price).toLocaleString('fa-IR')+' تومان':'توافقی')+'</p><p style="white-space:pre-wrap">'+esc(a.description||'بدون توضیحات')+'</p><div><span class="badge">'+esc(({not_reviewed:'بررسی هوش مصنوعی انجام نشده',flagged:'مشکوک',uncertain:'نیازمند بررسی انسانی',clear:'بدون هشدار هوش مصنوعی'}[a.ai_review_status]||a.ai_review_status))+'</span></div>'+(a.ai_review_reason?'<p><b>دلیل ارجاع:</b> '+esc(a.ai_review_reason)+'</p>':'')+'<div class="grid">'+pics.map((p,i)=>'<img src="'+esc(p.url)+'" alt="تصویر '+(i+1)+'" onclick="window.open(this.src,\'_blank\')">').join('')+'</div><label class="muted" for="note-'+a.id+'">یادداشت ناظر / دلیل رد یا اصلاح</label><textarea id="note-'+a.id+'" placeholder="در صورت رد یا درخواست اصلاح، دلیل را بنویسید…">'+esc(a.moderation_note||'')+'</textarea><div class="actions"><button class="approve" onclick="decide(\''+a.id+'\',\'published\')">تأیید و انتشار</button><button class="reject" onclick="decide(\''+a.id+'\',\'rejected\')">رد آگهی</button><button class="edit" onclick="decide(\''+a.id+'\',\'pending_review\')">درخواست اصلاح / نگه‌داشتن در صف</button></div></article>'
+ }).join('');
+}
+async function decide(id,status){
+ const note=document.getElementById('note-'+id).value.trim();
+ if(status==='rejected'&&!note){alert('برای رد آگهی، دلیل را بنویسید.');return}
+ if(status==='pending_review'&&!note){alert('لطفاً توضیح دهید چه اصلاحی لازم است.');return}
+ const {error}=await db.from('ads').update({status,moderation_note:note,updated_at:new Date().toISOString()}).eq('id',id);
+ if(error){alert('ثبت تصمیم انجام نشد: '+error.message);return}
+ say('تصمیم ناظر ثبت شد.');await loadQueue();
+}
+async function logout(){await db.auth.signOut();location.href='./'}
+init();
+</script></body></html>
