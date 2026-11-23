@@ -118,11 +118,12 @@ async function handleAuth(e){
  finally{btn.disabled=false}
 }
 async function demoLogout(){await db.auth.signOut();window.currentAgahinoUser=null;updateAccountButton();closeAccount();toast('از حساب خارج شدید.');await loadAds()}
+function adStatusLabel(status){return ({draft:'پیش‌نویس',pending_review:'در انتظار بررسی ناظر',published:'منتشر شده',rejected:'رد شده',sold:'فروخته شده',archived:'بایگانی شده'})[status]||'در حال بررسی وضعیت'}
 async function showMyAds(){
  const u=currentUser();if(!u){toast('ابتدا وارد حساب کاربری شوید.');return}
  const {data,error}=await db.from('ads').select('*').eq('user_id',u.id).order('created_at',{ascending:false});
  if(error){toast('دریافت آگهی‌های شما انجام نشد: '+error.message);return}
- document.getElementById('cards').innerHTML=data.length?data.map(x=>'<article class="listing"><div class="listing-body"><h3>'+escapeHtml(x.title)+'</h3><div class="price">'+money(x.price)+'</div><p>'+escapeHtml(x.city)+' — '+escapeHtml(x.status)+'</p><div class="top-actions"><button class="btn light detail-btn" onclick="editAd(\''+x.id+'\')">ویرایش</button><button class="btn outline detail-btn" onclick="toggleAdStatus(\''+x.id+'\',\''+x.status+'\')">'+(x.status==='sold'?'بازنشر آگهی':'علامت‌گذاری به‌عنوان فروخته‌شده')+'</button><button class="btn outline detail-btn" onclick="deleteAd(\''+x.id+'\')">حذف</button></div></div></article>').join(''):'<div class="empty">هنوز آگهی‌ای ثبت نکرده‌اید.</div>';
+ document.getElementById('cards').innerHTML=data.length?data.map(x=>'<article class="listing"><div class="listing-body"><h3>'+escapeHtml(x.title)+'</h3><div class="price">'+money(x.price)+'</div><p>'+escapeHtml(x.city)+' — <b>'+escapeHtml(adStatusLabel(x.status))+'</b></p><div class="top-actions"><button class="btn light detail-btn" onclick="editAd(\''+x.id+'\')">ویرایش</button><button class="btn outline detail-btn" onclick="toggleAdStatus(\''+x.id+'\',\''+x.status+'\')">'+(x.status==='sold'?'بازنشر آگهی':'علامت‌گذاری به‌عنوان فروخته‌شده')+'</button><button class="btn outline detail-btn" onclick="deleteAd(\''+x.id+'\')">حذف</button></div></div></article>').join(''):'<div class="empty">هنوز آگهی‌ای ثبت نکرده‌اید.</div>';
  closeAccount();document.getElementById('cards').scrollIntoView({behavior:'smooth'});
 }
 async function editAd(id){
@@ -156,7 +157,7 @@ function openModal(){if(!currentUser()){toast('برای ثبت آگهی ابتد
 function closeModal(){document.getElementById('modal').classList.remove('show')}
 async function saveAd(e){
  e.preventDefault();const u=currentUser();if(!u){toast('ابتدا وارد حساب شوید.');return}
- const btn=e.submitter;btn.disabled=true;
+ const btn=e.submitter;const originalButtonText=btn.textContent;btn.disabled=true;btn.textContent='در حال ثبت آگهی…';
  const input=document.getElementById('image'),files=[...input.files];
  let uploaded=[];
  try{
@@ -169,15 +170,15 @@ async function saveAd(e){
    const up=await db.storage.from('ad-images').upload(path,file,{upsert:false});if(up.error)throw up.error;
    uploaded.push({path,url:db.storage.from('ad-images').getPublicUrl(path).data.publicUrl});
   }
-  const row={user_id:u.id,title:document.getElementById('title').value.trim(),category:document.getElementById('category').value,price:Number(document.getElementById('price').value)||0,province:document.getElementById('province').value,city:document.getElementById('city').value.trim(),description:document.getElementById('description').value.trim(),status:'published'};
+  const row={user_id:u.id,title:document.getElementById('title').value.trim(),category:document.getElementById('category').value,price:Number(document.getElementById('price').value)||0,province:document.getElementById('province').value,city:document.getElementById('city').value.trim(),description:document.getElementById('description').value.trim(),status:'pending_review'};
   if(files.length){row.images=uploaded;row.image_path=uploaded[0].path;row.image_url=uploaded[0].url}
   let result;
   if(editingAdId)result=await db.from('ads').update({...row,updated_at:new Date().toISOString()}).eq('id',editingAdId).eq('user_id',u.id);
   else result=await db.from('ads').insert(row);
   if(result.error)throw result.error;
-  editingAdId=null;document.getElementById('adForm').reset();removeSelectedImage();closeModal();await loadAds();toast('آگهی با موفقیت ذخیره شد.');
+  editingAdId=null;document.getElementById('adForm').reset();removeSelectedImage();closeModal();await loadAds();document.getElementById('cards').scrollIntoView({behavior:'smooth',block:'start'});toast('آگهی شما با موفقیت ثبت شد و اکنون در انتظار بررسی ناظر است. پس از تأیید منتشر می‌شود.');
  }catch(err){if(uploaded.length)await db.storage.from('ad-images').remove(uploaded.map(x=>x.path));toast('ذخیره آگهی انجام نشد: '+(err.message||''))}
- finally{btn.disabled=false}
+ finally{btn.disabled=false;btn.textContent=originalButtonText}
 }
 async function deleteAd(id){if(!confirm('این آگهی حذف شود؟'))return;const {data:ad,error:readError}=await db.from('ads').select('images,image_path').eq('id',id).eq('user_id',currentUser().id).single();if(readError||!ad){toast('آگهی پیدا نشد یا دسترسی ندارید.');return}const paths=[...(ad.images||[]).map(x=>x.path).filter(Boolean),ad.image_path].filter((p,i,a)=>a.indexOf(p)===i);if(paths.length){const removed=await db.storage.from('ad-images').remove(paths);if(removed.error){toast('پاک‌کردن تصاویر انجام نشد؛ آگهی حذف نشد.');return}}const {error}=await db.from('ads').delete().eq('id',id).eq('user_id',currentUser().id);if(error){toast('حذف انجام نشد: '+error.message);return}await loadAds();showMyAds();toast('آگهی حذف شد.')}
 document.getElementById('image').addEventListener('change',previewSelectedImage);
