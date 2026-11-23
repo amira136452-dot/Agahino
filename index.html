@@ -66,6 +66,7 @@ footer{border-top:1px solid var(--line);background:#fff;padding:22px 0;color:var
 <div class="field"><label>وضعیت بدنه</label><select id="vehicleBody"><option value="">انتخاب کنید</option><option>بدون رنگ</option><option>یک لکه رنگ</option><option>چند لکه رنگ</option><option>تمام‌رنگ</option><option>تصادفی</option></select></div>
 <div class="field"><label>وضعیت خودرو</label><select id="vehicleCondition"><option value="">انتخاب کنید</option><option>سالم</option><option>نیازمند تعمیر</option><option>اوراقی</option></select></div>
 </div>
+<div id="categorySpecificFields" class="panel" style="display:none;margin:12px 0;padding:14px;background:#f8faff;border:1px solid #d6e4ff"><b id="categoryFieldsTitle">مشخصات تکمیلی</b><p class="hint">مشخصات را به‌ترتیب انتخاب یا وارد کنید تا آگهی دقیق‌تر نمایش داده شود.</p><div id="categoryFieldsGrid"></div></div>
 <div class="field"><label>قیمت (تومان)</label><input id="price" type="number" min="0" placeholder="برای توافقی خالی بگذارید"></div>
 <div class="field"><label>استان *</label><select id="province" required><option value="">انتخاب استان</option><option>مرکزی</option><option>تهران</option><option>البرز</option><option>قم</option><option>قزوین</option><option>گیلان</option><option>مازندران</option><option>گلستان</option><option>سمنان</option><option>اصفهان</option><option>یزد</option><option>کرمان</option><option>هرمزگان</option><option>بوشهر</option><option>فارس</option><option>کهگیلویه و بویراحمد</option><option>چهارمحال و بختیاری</option><option>خوزستان</option><option>لرستان</option><option>همدان</option><option>کردستان</option><option>کرمانشاه</option><option>ایلام</option><option>آذربایجان شرقی</option><option>آذربایجان غربی</option><option>اردبیل</option><option>زنجان</option><option>خراسان شمالی</option><option>خراسان رضوی</option><option>خراسان جنوبی</option><option>سیستان و بلوچستان</option></select></div><div class="field"><label>شهر *</label><input id="city" required placeholder="مثلاً اراک"></div>
 <div class="field"><label>توضیحات</label><textarea id="description" maxlength="500" placeholder="جزئیات کالا یا خدمات را بنویسید..."></textarea></div>
@@ -240,12 +241,61 @@ async function saveAd(e){
 async function deleteAd(id){if(!confirm('این آگهی حذف شود؟'))return;const {data:ad,error:readError}=await db.from('ads').select('images,image_path').eq('id',id).eq('user_id',currentUser().id).single();if(readError||!ad){toast('آگهی پیدا نشد یا دسترسی ندارید.');return}const paths=[...(ad.images||[]).map(x=>x.path).filter(Boolean),ad.image_path].filter((p,i,a)=>a.indexOf(p)===i);if(paths.length){const removed=await db.storage.from('ad-images').remove(paths);if(removed.error){toast('پاک‌کردن تصاویر انجام نشد؛ آگهی حذف نشد.');return}}const {error}=await db.from('ads').delete().eq('id',id).eq('user_id',currentUser().id);if(error){toast('حذف انجام نشد: '+error.message);return}await loadAds();showMyAds();toast('آگهی حذف شد.')}
 
 const vehicleModels={'ایران‌خودرو':['پژو ۲۰۶','پژو ۲۰۷','پژو پارس','سمند','دنا','دنا پلاس','رانا','تارا','سورن','هایما'],'سایپا':['پراید ۱۳۱','پراید ۱۱۱','تیبا','تیبا ۲','کوییک','ساینا','شاهین','اطلس'],'پژو':['۲۰۶','۲۰۷','۴۰۵','پارس','۲۰۰۸','۵۰۸'],'سمند':['LX','EF7','سورن','سورن پلاس'],'دنا':['دنا','دنا پلاس','دنا پلاس توربو'],'رانا':['رانا','رانا پلاس'],'تارا':['تارا دنده‌ای','تارا اتوماتیک'],'پراید':['۱۳۱','۱۳۲','۱۱۱','۱۵۱'],'تیبا':['صندوق‌دار','هاچ‌بک'],'کوییک':['دنده‌ای','اتوماتیک','R','S','GXR'],'شاهین':['G','GL','اتوماتیک'],'Toyota':['کرولا','کمری','پرادو','یاریس','راو۴','هایلوکس'],'Hyundai':['النترا','سوناتا','توسان','سانتافه','اکسنت'],'Kia':['سراتو','اپتیما','اسپورتیج','موهاوی','پیکانتو'],'Nissan':['ماکسیما','قشقایی','تیانا','پاترول'],'رنو':['تندر ۹۰','ساندرو','مگان','داستر','کولیوس'],'ام‌وی‌ام':['۱۱۰','۳۱۵','X22','X33','X55'],'چری':['آریزو ۵','آریزو ۶','تیگو ۵','تیگو ۷'],'جک':['J3','J4','S3','S5'],'فونیکس':['آریزو ۶','FX','تیگو ۷','تیگو ۸'],'فولکس‌واگن':['گلف','پاسات','تیگوان'],'بنز':['C کلاس','E کلاس','S کلاس','GLC'],'BMW':['سری ۳','سری ۵','X3','X5'],'سایر':['سایر مدل‌ها']};
-function renderCategoryFields(){const show=document.getElementById('category').value==='خودرو و وسایل نقلیه';document.getElementById('vehicleFields').style.display=show?'block':'none';document.getElementById('vehicleBrand').required=show;document.getElementById('vehicleModel').required=show;document.getElementById('vehicleYear').required=show}
+const categoryAttributeSchemas={
+'کالای دیجیتال':[
+{label:'نوع کالا',type:'select',required:true,options:['موبایل','تبلت','لپ‌تاپ','کامپیوتر','مانیتور','تلویزیون','ساعت هوشمند','کنسول بازی','دوربین','لوازم جانبی','قطعات کامپیوتر','سایر']},
+{label:'برند',type:'select',options:['Apple','Samsung','Xiaomi','Huawei','Honor','Lenovo','Asus','HP','Dell','Acer','Sony','LG','Microsoft','سایر']},
+{label:'مدل',type:'text'},{label:'حافظه داخلی',type:'select',options:['16 گیگابایت','32 گیگابایت','64 گیگابایت','128 گیگابایت','256 گیگابایت','512 گیگابایت','1 ترابایت','2 ترابایت','نامشخص']},
+{label:'رم (RAM)',type:'select',options:['2 گیگابایت','4 گیگابایت','6 گیگابایت','8 گیگابایت','12 گیگابایت','16 گیگابایت','32 گیگابایت','64 گیگابایت','نامشخص']},
+{label:'وضعیت',type:'select',required:true,options:['نو و پلمپ','در حد نو','کارکرده سالم','نیازمند تعمیر']},{label:'لوازم همراه',type:'text'}],
+'خانه و آشپزخانه':[
+{label:'نوع وسیله',type:'select',required:true,options:['مبلمان','میز و صندلی','تخت و سرویس خواب','یخچال و فریزر','ماشین لباسشویی','ماشین ظرفشویی','اجاق گاز','مایکروویو','جاروبرقی','ظروف و لوازم آشپزخانه','دکوراسیون','سایر']},
+{label:'برند',type:'text'},{label:'جنس',type:'text'},{label:'ابعاد',type:'text'},{label:'رنگ',type:'text'},
+{label:'وضعیت',type:'select',required:true,options:['نو','در حد نو','کارکرده سالم','نیازمند تعمیر']},{label:'مدت استفاده',type:'text'}],
+'املاک':[
+{label:'نوع معامله',type:'select',required:true,options:['فروش','اجاره','رهن کامل','معاوضه']},
+{label:'نوع ملک',type:'select',required:true,options:['آپارتمان','خانه ویلایی','زمین','مغازه','دفتر کار','باغ و باغچه','سوله و انبار','کلنگی','سایر']},
+{label:'متراژ (متر مربع)',type:'number',required:true},{label:'تعداد اتاق',type:'select',options:['بدون اتاق','۱','۲','۳','۴','۵ و بیشتر']},
+{label:'سن بنا (سال)',type:'number'},{label:'طبقه',type:'text'},{label:'تعداد طبقات ساختمان',type:'number'},
+{label:'پارکینگ',type:'select',options:['دارد','ندارد']},{label:'آسانسور',type:'select',options:['دارد','ندارد']},{label:'انباری',type:'select',options:['دارد','ندارد']},
+{label:'نوع سند',type:'select',options:['تک‌برگ','شش‌دانگ','قولنامه‌ای','سایر']}],
+'خدمات':[
+{label:'نوع خدمت',type:'select',required:true,options:['فنی و تعمیرات','ساختمان و تأسیسات','آموزش و تدریس','حمل‌ونقل','نظافت','زیبایی و آرایش','کامپیوتر و فناوری','طراحی و تبلیغات','مشاوره','خدمات خودرو','سایر']},
+{label:'تخصص یا عنوان خدمت',type:'text',required:true},{label:'سابقه کار (سال)',type:'number'},
+{label:'محدوده ارائه خدمت',type:'text'},{label:'حضوری یا غیرحضوری',type:'select',options:['حضوری','آنلاین','هر دو']},
+{label:'امکان مراجعه در محل',type:'select',options:['بله','خیر']},{label:'ساعات پاسخگویی',type:'text'}],
+'وسایل شخصی':[
+{label:'نوع کالا',type:'select',required:true,options:['پوشاک','کفش','کیف','ساعت','زیورآلات','عینک','لوازم ورزشی','لوازم کودک','عطر و ادکلن','سایر']},
+{label:'برند',type:'text'},{label:'سایز',type:'text'},{label:'جنس',type:'text'},{label:'رنگ',type:'text'},
+{label:'وضعیت',type:'select',required:true,options:['نو','در حد نو','کارکرده سالم','دارای ایراد']},{label:'مناسب برای',type:'select',options:['زنانه','مردانه','بچگانه','همگانی']}],
+'سایر':[
+{label:'نوع کالا یا موضوع آگهی',type:'text',required:true},{label:'برند یا سازنده',type:'text'},
+{label:'مدل یا شناسه',type:'text'},{label:'وضعیت',type:'select',options:['نو','در حد نو','کارکرده سالم','نیازمند تعمیر','نامشخص']},
+{label:'ویژگی مهم',type:'text'}]
+};
+function renderCategoryFields(){
+ const category=document.getElementById('category').value,vehicle=category==='خودرو و وسایل نقلیه';
+ document.getElementById('vehicleFields').style.display=vehicle?'block':'none';
+ ['vehicleBrand','vehicleModel','vehicleYear'].forEach(id=>document.getElementById(id).required=vehicle);
+ const schema=vehicle?[]:(categoryAttributeSchemas[category]||[]);
+ const box=document.getElementById('categorySpecificFields'),grid=document.getElementById('categoryFieldsGrid');
+ box.style.display=schema.length?'block':'none';document.getElementById('categoryFieldsTitle').textContent='مشخصات '+category;
+ grid.innerHTML=schema.map((f,i)=>{const id='catAttr'+i,opts=(f.options||[]).map(o=>'<option value="'+escapeHtml(o)+'">'+escapeHtml(o)+'</option>').join('');return '<div class="field"><label for="'+id+'">'+escapeHtml(f.label)+(f.required?' *':'')+'</label>'+(f.type==='select'?'<select id="'+id+'" data-attr-label="'+escapeHtml(f.label)+'" '+(f.required?'required':'')+'><option value="">انتخاب کنید</option>'+opts+'</select>':'<input id="'+id+'" data-attr-label="'+escapeHtml(f.label)+'" type="'+(f.type==='number'?'number':'text')+'" '+(f.required?'required':'')+' placeholder="'+escapeHtml(f.label)+'">')+'</div>'}).join('');
+}
+
 function updateVehicleModels(selected=''){const brand=document.getElementById('vehicleBrand').value,model=document.getElementById('vehicleModel'),list=vehicleModels[brand]||['سایر مدل‌ها'];model.innerHTML='<option value="">انتخاب مدل</option>'+list.map(x=>'<option>'+x+'</option>').join('');model.disabled=!brand;if(selected)model.value=selected}
 document.getElementById('vehicleBrand').addEventListener('change',()=>updateVehicleModels());
 (function(){const y=document.getElementById('vehicleYear');for(let n=1405;n>=1360;n--){const o=document.createElement('option');o.value=String(n);o.textContent=String(n);y.appendChild(o)}const o=document.createElement('option');o.value='قبل از ۱۳۶۰';o.textContent='قبل از ۱۳۶۰';y.appendChild(o)})();
-function collectAdAttributes(){if(document.getElementById('category').value!=='خودرو و وسایل نقلیه')return {};const val=id=>document.getElementById(id).value;return {'برند':val('vehicleBrand'),'مدل':val('vehicleModel'),'سال تولید':val('vehicleYear'),'کارکرد (کیلومتر)':val('vehicleMileage'),'گیربکس':val('vehicleGear'),'سوخت':val('vehicleFuel'),'رنگ':val('vehicleColor'),'وضعیت بدنه':val('vehicleBody'),'وضعیت خودرو':val('vehicleCondition')}}
-function setVehicleAttributes(a){const map={'برند':'vehicleBrand','سال تولید':'vehicleYear','کارکرد (کیلومتر)':'vehicleMileage','گیربکس':'vehicleGear','سوخت':'vehicleFuel','رنگ':'vehicleColor','وضعیت بدنه':'vehicleBody','وضعیت خودرو':'vehicleCondition'};Object.entries(map).forEach(([k,id])=>document.getElementById(id).value=a[k]||'');updateVehicleModels(a['مدل']||'')}
+function collectAdAttributes(){
+ const category=document.getElementById('category').value;
+ if(category==='خودرو و وسایل نقلیه'){const val=id=>document.getElementById(id).value;return {'برند':val('vehicleBrand'),'مدل':val('vehicleModel'),'سال تولید':val('vehicleYear'),'کارکرد (کیلومتر)':val('vehicleMileage'),'گیربکس':val('vehicleGear'),'سوخت':val('vehicleFuel'),'رنگ':val('vehicleColor'),'وضعیت بدنه':val('vehicleBody'),'وضعیت خودرو':val('vehicleCondition')}}
+ const result={};document.querySelectorAll('#categoryFieldsGrid [data-attr-label]').forEach(el=>{if(el.value.trim())result[el.dataset.attrLabel]=el.value.trim()});return result;
+}
+function setVehicleAttributes(a){
+ const map={'برند':'vehicleBrand','سال تولید':'vehicleYear','کارکرد (کیلومتر)':'vehicleMileage','گیربکس':'vehicleGear','سوخت':'vehicleFuel','رنگ':'vehicleColor','وضعیت بدنه':'vehicleBody','وضعیت خودرو':'vehicleCondition'};
+ Object.entries(map).forEach(([k,id])=>document.getElementById(id).value=a[k]||'');updateVehicleModels(a['مدل']||'');
+ document.querySelectorAll('#categoryFieldsGrid [data-attr-label]').forEach(el=>{el.value=a[el.dataset.attrLabel]||''});
+}
 
 document.getElementById('image').addEventListener('change',previewSelectedImage);
 render();refreshSession().then(loadAds);
