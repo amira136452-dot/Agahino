@@ -2,11 +2,11 @@
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#155eef"><title>پنل نظارت آگهینو</title>
+<meta name="theme-color" content="#155eef"><meta name="description" content="پنل مستقل بررسی و مدیریت آگهی‌های آگهینو"><link rel="manifest" href="./manifest-moderator.webmanifest"><link rel="icon" type="image/svg+xml" href="./icon.svg"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><title>پنل ناظر آگهینو</title>
 <style>
 *{box-sizing:border-box}body{margin:0;font-family:Tahoma,Arial,sans-serif;background:#f5f7fb;color:#182230;line-height:1.8}.wrap{max-width:1000px;margin:auto;padding:20px}.head,.card{background:#fff;border:1px solid #e4e7ec;border-radius:16px;padding:18px;margin-bottom:14px}.head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}h1{font-size:22px;margin:0}h2{font-size:18px;margin:0 0 8px}.muted{color:#667085;font-size:13px}.badge{display:inline-block;border-radius:20px;padding:3px 10px;font-size:12px;background:#fff4e5;color:#9a5700}.badge.clear{background:#ecfdf3;color:#067647}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:12px 0}.grid img{width:100%;height:160px;object-fit:contain;background:#f8fafc;border-radius:10px;cursor:zoom-in}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}button{border:0;border-radius:10px;padding:10px 14px;font:inherit;font-weight:700;cursor:pointer}.approve{background:#079455;color:white}.reject{background:#d92d20;color:white}.edit{background:#eef4ff;color:#155eef}.refresh{background:#f2f4f7;color:#344054}textarea{width:100%;min-height:72px;border:1px solid #d0d5dd;border-radius:10px;padding:10px;font:inherit}.empty{text-align:center;padding:35px;color:#667085;background:white;border-radius:14px}.denied{background:#fff4e5;color:#93370d;padding:16px;border-radius:12px}@media(max-width:500px){.wrap{padding:12px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style></head><body><main class="wrap">
-<header class="head"><div><h1>پنل نظارت آگهینو</h1><div class="muted">بررسی موارد ارجاع‌شده و تصمیم نهایی ناظر</div></div><div class="actions"><button class="refresh" onclick="loadQueue()">به‌روزرسانی</button><button class="refresh" onclick="logout()">خروج</button></div></header>
+<header class="head"><div><h1>پنل ناظر آگهینو</h1><div class="muted">بررسی و تصمیم‌گیری درباره آگهی‌ها</div><div class="actions"><a class="refresh" style="text-decoration:none;padding:8px 12px;border-radius:10px" href="./">صفحه اصلی</a><a class="refresh" style="text-decoration:none;padding:8px 12px;border-radius:10px" href="./profile.html">پنل کاربری</a></div></div><div class="actions"><button class="refresh" onclick="loadQueue()">به‌روزرسانی</button><button class="refresh" onclick="logout()">خروج</button></div></header>
 <div id="message" class="muted">در حال بررسی دسترسی…</div><section id="queue"></section>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>
@@ -60,5 +60,6 @@ async function decide(id,status){
  say('تصمیم ناظر ثبت شد.');await loadQueue();
 }
 async function logout(){await db.auth.signOut();location.href='./'}
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}
 init();
 </script></body></html>
