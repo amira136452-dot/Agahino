@@ -1,0 +1,16 @@
+{
+  "id": "./profile.html",
+  "name": "آگهینو | پنل کاربری",
+  "short_name": "پنل کاربری",
+  "lang": "fa",
+  "dir": "rtl",
+  "start_url": "./profile.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f8fc",
+  "theme_color": "#155eef",
+  "description": "مدیریت حساب و آگهی‌های شخصی در آگهینو",
+  "icons": [
+    { "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
