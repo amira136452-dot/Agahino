@@ -1,5 +1,5 @@
-const CACHE_NAME = "agahino-shell-v13";
-const APP_FILES = ["./", "./index.html", "./manifest.webmanifest", "./manifest-user.webmanifest", "./manifest-moderator.webmanifest", "./profile.html", "./admin.html", "./icon.svg"];
+const CACHE_NAME = "agahino-shell-v14";
+const APP_FILES = ["./", "./index.html", "./manifest.webmanifest?v=green2", "./manifest-user.webmanifest", "./manifest-moderator.webmanifest", "./profile.html", "./admin.html", "./icon.svg?v=green2"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_FILES)));
