@@ -11,7 +11,7 @@
   "description": "ثبت و مشاهده آگهی‌های خرید، فروش کالا و خدمات",
   "icons": [
     {
-      "src": "./icon.svg",
+      "src": "./icon.svg?v=green2",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
