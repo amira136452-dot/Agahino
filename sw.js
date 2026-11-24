@@ -1,4 +1,4 @@
-const CACHE_NAME = "agahino-shell-v10";
+const CACHE_NAME = "agahino-shell-v11";
 const APP_FILES = ["./", "./index.html", "./manifest.webmanifest", "./manifest-user.webmanifest", "./manifest-moderator.webmanifest", "./profile.html", "./admin.html", "./icon.svg"];
 
 self.addEventListener("install", (event) => {
