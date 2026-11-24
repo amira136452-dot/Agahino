@@ -7,7 +7,7 @@
 *{box-sizing:border-box}body{margin:0;font-family:Tahoma,Arial,sans-serif;background:#f5f7fb;color:#182230;line-height:1.8}.wrap{max-width:1000px;margin:auto;padding:20px}.head,.card{background:#fff;border:1px solid #e4e7ec;border-radius:16px;padding:18px;margin-bottom:14px}.head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}h1{font-size:22px;margin:0}h2{font-size:18px;margin:0 0 8px}.muted{color:#667085;font-size:13px}.badge{display:inline-block;border-radius:20px;padding:3px 10px;font-size:12px;background:#fff4e5;color:#9a5700}.badge.clear{background:#ecfdf3;color:#067647}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:12px 0}.grid img{width:100%;height:160px;object-fit:contain;background:#f8fafc;border-radius:10px;cursor:zoom-in}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}button{border:0;border-radius:10px;padding:10px 14px;font:inherit;font-weight:700;cursor:pointer}.approve{background:#079455;color:white}.reject{background:#d92d20;color:white}.edit{background:#e8f5ee;color:#087d48}.refresh{background:#f2f4f7;color:#344054}textarea{width:100%;min-height:72px;border:1px solid #d0d5dd;border-radius:10px;padding:10px;font:inherit}.empty{text-align:center;padding:35px;color:#667085;background:white;border-radius:14px}.denied{background:#fff4e5;color:#93370d;padding:16px;border-radius:12px}@media(max-width:500px){.wrap{padding:12px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style></head><body><main class="wrap">
 <header class="head"><div><h1><img src="./icon.svg" alt="" width="38" height="38" style="vertical-align:middle;margin-left:8px">پنل ناظر آگهینو</h1><div class="muted">بررسی و تصمیم‌گیری درباره آگهی‌ها</div><div class="actions"><a class="refresh" style="text-decoration:none;padding:8px 12px;border-radius:10px" href="./">صفحه اصلی</a><a class="refresh" style="text-decoration:none;padding:8px 12px;border-radius:10px" href="./profile.html">پنل کاربری</a></div></div><div class="actions"><button class="refresh" onclick="loadQueue()">به‌روزرسانی</button><button class="refresh" onclick="logout()">خروج</button></div></header>
-<div id="message" class="muted">در حال بررسی دسترسی…</div><section id="queue"></section>
+<div id="message" class="muted">در حال بررسی دسترسی…</div><section class="card"><h2>سفارش‌های تبلیغاتی فروشگاه‌ها</h2><p class="muted">درخواست‌ها را بررسی کنید؛ برای سفارش طراحی، یادداشت و وضعیت پیگیری ثبت کنید. تبلیغ فقط پس از تأیید شما فعال می‌شود.</p><div id="campaignQueue" class="muted">در حال دریافت سفارش‌ها…</div></section><section id="queue"></section>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>
 const SUPABASE_URL='https://zfenskabbrhssqxxcasw.supabase.co';
@@ -16,6 +16,24 @@ const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 let reviewer=null;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function say(s){document.getElementById('message').textContent=s}
+async function loadCampaigns(){
+ const root=document.getElementById('campaignQueue');if(!reviewer||reviewer.app_metadata?.role!=='admin')return;
+ root.textContent='در حال دریافت سفارش‌ها…';
+ const {data,error}=await db.from('ad_campaigns').select('*').order('created_at',{ascending:false});
+ if(error){root.textContent='خطا در دریافت سفارش‌ها: '+error.message;return}
+ if(!data?.length){root.textContent='هنوز سفارشی ثبت نشده است.';return}
+ root.innerHTML=data.map(c=>'<article style="border:1px solid #e4e7ec;border-radius:12px;padding:13px;margin:12px 0"><h3>'+esc(c.business_name)+' — '+esc(c.title)+'</h3><p class="muted">تماس: '+esc(c.contact_phone)+' | '+new Date(c.created_at).toLocaleString('fa-IR')+' | مدت: '+esc(c.duration_hours)+' ساعت</p><p>'+esc(c.wants_design?'درخواست طراحی تبلیغ':'تبلیغ آماده: '+c.creative_type)+'</p><p style="white-space:pre-wrap">'+esc(c.wants_design?(c.design_brief||'بدون توضیح'):c.body)+'</p>'+(c.media_url?'<p><a href="'+esc(c.media_url)+'" target="_blank" rel="noopener">مشاهده فایل تبلیغ</a></p>':'')+(c.destination_url?'<p class="muted">لینک مقصد: '+esc(c.destination_url)+'</p>':'')+'<p><b>وضعیت:</b> '+esc(c.status)+(c.admin_note?'<br><b>یادداشت:</b> '+esc(c.admin_note):'')+'</p><label class="muted">یادداشت برای فروشگاه / دستور طراحی</label><textarea id="campnote-'+c.id+'">'+esc(c.admin_note||'')+'</textarea><div class="actions">'+(c.wants_design?'<button class="edit" onclick="campaignAction(\''+c.id+'\',\'design_in_progress\')">شروع طراحی</button><button class="edit" onclick="campaignAction(\''+c.id+'\',\'awaiting_customer\')">ارسال طرح برای تأیید فروشگاه</button>':'')+'<button class="approve" onclick="campaignAction(\''+c.id+'\',\'approved\')">تأیید و شروع نمایش</button><button class="reject" onclick="campaignAction(\''+c.id+'\',\'rejected\')">رد سفارش</button></div></article>').join('');
+}
+async function campaignAction(id,status){
+ const note=document.getElementById('campnote-'+id).value.trim();
+ const {data:row,error:readError}=await db.from('ad_campaigns').select('duration_hours').eq('id',id).maybeSingle();
+ if(readError||!row){alert('سفارش پیدا نشد: '+(readError?.message||''));return}
+ const update={status,admin_note:note,updated_at:new Date().toISOString()};
+ if(status==='approved'){const start=new Date();update.starts_at=start.toISOString();update.ends_at=new Date(start.getTime()+Number(row.duration_hours)*3600000).toISOString();update.approved_at=start.toISOString();update.approved_by=reviewer.id;}
+ const {error}=await db.from('ad_campaigns').update(update).eq('id',id);
+ if(error){alert('ثبت تغییر انجام نشد: '+error.message);return}
+ await loadCampaigns();
+}
 async function init(){
  let {data:{session}}=await db.auth.getSession();
  if(!session){say('برای ورود ناظر، ابتدا در صفحه اصلی آگهینو وارد حساب شوید.');document.getElementById('queue').innerHTML='<div class="denied"><a href="./">رفتن به آگهینو و ورود</a>؛ سپس دوباره پنل نظارت را باز کنید.</div>';return}
@@ -32,7 +50,7 @@ async function init(){
    document.getElementById('queue').innerHTML='<div class="denied">لطفاً یک‌بار از حساب خارج شوید، دوباره وارد شوید و پنل را باز کنید. <a href="./">بازگشت به آگهینو</a></div>';
    return
  }
- say('ورود ناظر تأیید شد.');await loadQueue();
+ say('ورود ناظر تأیید شد.');await loadQueue();await loadCampaigns();
 }
 async function loadQueue(){
  if(!reviewer||reviewer.app_metadata?.role!=='admin')return;
@@ -57,7 +75,7 @@ async function decide(id,status){
  const {data,error}=await db.from('ads').update(update).eq('id',id).select('id').maybeSingle();
  if(error){alert('ثبت تصمیم انجام نشد: '+error.message);return}
  if(!data){alert('هیچ آگهی‌ای تغییر نکرد؛ دسترسی یا وضعیت آگهی را بررسی کنید.');return}
- say('تصمیم ناظر ثبت شد.');await loadQueue();
+ say('تصمیم ناظر ثبت شد.');await loadQueue();await loadCampaigns();
 }
 async function logout(){await db.auth.signOut();location.href='./'}
 if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}
