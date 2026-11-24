@@ -8,7 +8,7 @@
   "scope": "./",
   "display": "standalone",
   "background_color": "#f5f7fb",
-  "theme_color": "#155eef",
+  "theme_color": "#087d48",
   "description": "بررسی و مدیریت آگهی‌های ارسالی به ناظر آگهینو",
   "icons": [
     { "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
