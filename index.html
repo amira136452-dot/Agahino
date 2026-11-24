@@ -320,6 +320,7 @@ function setVehicleAttributes(a){
 
 document.getElementById('image').addEventListener('change',previewSelectedImage);
 render();refreshSession().then(async()=>{await loadAds();await loadActiveCampaigns()});
+setInterval(loadActiveCampaigns,60000);
 db.auth.onAuthStateChange((_event,session)=>{window.currentAgahinoUser=session?.user||null;updateAccountButton();loadAds()});
 if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}
 </script>
