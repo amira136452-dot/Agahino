@@ -11,6 +11,6 @@
   "theme_color": "#087d48",
   "description": "مدیریت حساب و آگهی‌های شخصی در آگهینو",
   "icons": [
-    { "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    { "src": "./icon.svg?v=green3", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
   ]
 }
