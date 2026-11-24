@@ -11,6 +11,6 @@
   "theme_color": "#087d48",
   "description": "بررسی و مدیریت آگهی‌های ارسالی به ناظر آگهینو",
   "icons": [
-    { "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    { "src": "./icon.svg?v=green3", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
   ]
 }
