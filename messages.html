@@ -10,7 +10,7 @@
 <form id="sendForm" class="send"><textarea id="body" rows="2" maxlength="3000" placeholder="پیام خود را بنویسید…" required></textarea><button class="btn" type="submit">ارسال</button></form></section></div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>
-const db=window.supabase.createClient('https://zfenskabbrhssqxxcasw.supabase.co','sb_publishable_4vcGwG6QhV5gTaJWyIwckQ_N2QnK6Kq');
+const db=window.supabase.createClient('https://zfenskabbrhssqxxcasw.supabase.co','sb_publishable_4vcGwG6QhV5gTaJWyIwckQ_NQ2nK6Kq');
 let me=null,active=null,channel=null;
 const $=id=>document.getElementById(id);
 const esc=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
