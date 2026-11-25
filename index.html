@@ -198,7 +198,27 @@ async function showAdDetail(id){
  const galleryHtml=gallery.length?'<div class="detail-gallery">'+gallery.map((im,i)=>'<img loading="lazy" src="'+escapeHtml(im.url)+'" alt="عکس '+(i+1)+' از '+escapeHtml(a.title)+'" onclick="openImageViewer(\''+escapeHtml(im.url)+'\')">').join('')+'</div><div class="hint">برای دیدن تصویر در اندازه بزرگ، روی آن بزنید.</div>':'<div class="photo" style="border-radius:13px;margin:12px 0">🛍️</div>';
  const location=[a.city,a.province].filter(Boolean).join('، ');
  document.getElementById('detailContent').innerHTML='<span class="category-tag">'+escapeHtml(a.category)+'</span>'+galleryHtml+'<div class="detail-price">'+money(a.price)+'</div><div class="detail-facts"><div class="detail-fact"><b>موقعیت</b>📍 '+escapeHtml(location||'ثبت نشده')+'</div><div class="detail-fact"><b>تاریخ ثبت</b>'+new Date(a.created_at).toLocaleDateString('fa-IR')+'</div></div>'+attrHtml+'<h3 style="font-size:16px;margin:18px 0 7px">توضیحات فروشنده</h3><div class="detail-description">'+escapeHtml(a.description||'توضیحی برای این آگهی ثبت نشده است.')+'</div>';
+ document.getElementById('detailContent').innerHTML+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:18px"><button class="btn primary" onclick="startConversation(\\''+a.id+'\\',\\''+a.user_id+'\\')">💬 سؤال از فروشنده</button><button class="btn outline" onclick="reportAd(\\''+a.id+'\\')">گزارش آگهی</button></div>';
  document.getElementById('detailModal').classList.add('show')
+}
+async function startConversation(adId,sellerId){
+ const u=currentUser();if(!u){toast('برای پیام دادن ابتدا وارد حساب شوید.');closeDetail();openAccount();return}
+ if(u.id===sellerId){toast('این آگهی متعلق به خود شماست.');return}
+ const {data:existing}=await db.from('ad_conversations').select('id').eq('ad_id',adId).eq('buyer_id',u.id).maybeSingle();
+ let conversationId=existing?.id;
+ if(!conversationId){const {data,error}=await db.from('ad_conversations').insert({ad_id:adId,buyer_id:u.id,seller_id:sellerId}).select('id').single();if(error){toast('شروع گفت‌وگو انجام نشد: '+error.message);return}conversationId=data.id}
+ location.href='./messages.html?conversation='+encodeURIComponent(conversationId);
+}
+async function reportAd(adId){
+ const u=currentUser();if(!u){toast('برای گزارش آگهی ابتدا وارد حساب شوید.');openAccount();return}
+ const reason=prompt('علت گزارش را وارد کنید: fraud / wrong_information / prohibited_item / spam / abuse / other','other');
+ if(!reason)return;
+ const allowed=['fraud','wrong_information','prohibited_item','spam','abuse','other'];
+ if(!allowed.includes(reason)){toast('دلیل گزارش معتبر نیست.');return}
+ const details=prompt('توضیح تکمیلی (اختیاری):','')||null;
+ const {error}=await db.from('ad_reports').insert({ad_id:adId,reporter_id:u.id,reason,details});
+ if(error){toast('ثبت گزارش انجام نشد: '+error.message);return}
+ toast('گزارش شما برای بررسی ثبت شد.');
 }
 function closeDetail(){document.getElementById('detailModal').classList.remove('show')}
 function openImageViewer(url){const v=document.getElementById('imageViewer');document.getElementById('imageViewerImg').src=url;v.classList.add('show')}
