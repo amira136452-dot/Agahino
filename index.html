@@ -85,6 +85,7 @@ footer{border-top:1px solid var(--line);background:#fff;padding:22px 0;color:var
 <div class="field"><label>قیمت (تومان)</label><input id="price" type="number" min="0" placeholder="برای توافقی خالی بگذارید"></div>
 <div class="field"><label>استان *</label><select id="province" required><option value="">انتخاب استان</option><option>مرکزی</option><option>تهران</option><option>البرز</option><option>قم</option><option>قزوین</option><option>گیلان</option><option>مازندران</option><option>گلستان</option><option>سمنان</option><option>اصفهان</option><option>یزد</option><option>کرمان</option><option>هرمزگان</option><option>بوشهر</option><option>فارس</option><option>کهگیلویه و بویراحمد</option><option>چهارمحال و بختیاری</option><option>خوزستان</option><option>لرستان</option><option>همدان</option><option>کردستان</option><option>کرمانشاه</option><option>ایلام</option><option>آذربایجان شرقی</option><option>آذربایجان غربی</option><option>اردبیل</option><option>زنجان</option><option>خراسان شمالی</option><option>خراسان رضوی</option><option>خراسان جنوبی</option><option>سیستان و بلوچستان</option></select></div><div class="field"><label>شهر *</label><input id="city" required placeholder="مثلاً اراک"></div>
 <div class="field"><label>توضیحات</label><textarea id="description" maxlength="500" placeholder="جزئیات کالا یا خدمات را بنویسید..."></textarea></div>
+<div class="field"><label>شماره تماس این آگهی</label><input id="contactPhone" type="tel" inputmode="tel" maxlength="30" placeholder="مثلاً 09123456789"><label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-weight:500"><input id="showContactPhone" type="checkbox" style="width:auto"> شماره من در جزئیات این آگهی نمایش داده شود</label><div class="hint">اگر این گزینه را فعال نکنید، شماره برای بازدیدکنندگان نمایش داده نمی‌شود.</div></div>
 <div class="field"><label>تصاویر آگهی (اختیاری، حداکثر ۵ عکس)</label><input id="image" type="file" accept="image/jpeg,image/png,image/webp" multiple><div class="hint">می‌توانید هم‌زمان تا ۵ عکس انتخاب کنید؛ حجم هر عکس حداکثر ۵ مگابایت است. پس از انتخاب، هر عکس را جداگانه بررسی یا حذف کنید.</div><div id="imagePreview" style="display:none;margin-top:10px;border:1px solid #e4e7ec;border-radius:12px;padding:10px"><div id="imagePreviewGrid" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px"></div><label style="display:flex;align-items:center;gap:8px;margin-top:10px"><input id="imageReviewed" type="checkbox" style="width:auto"> همه عکس‌ها را بررسی کردم و تأیید می‌کنم</label></div></div>
 <button class="btn primary" type="submit" style="width:100%">ثبت آگهی</button>
 </form></div></div>
@@ -179,6 +180,10 @@ async function editAd(id){
  document.getElementById('price').value=data.price??'';
  document.getElementById('province').value=data.province||'';document.getElementById('city').value=data.city||'';
  document.getElementById('description').value=data.description||'';
+ document.getElementById('contactPhone').value='';
+ document.getElementById('showContactPhone').checked=false;
+ const {data:contact}=await db.from('ad_contact_settings').select('contact_phone,show_phone').eq('ad_id',id).maybeSingle();
+ if(contact){document.getElementById('contactPhone').value=contact.contact_phone||'';document.getElementById('showContactPhone').checked=!!contact.show_phone}
  document.getElementById('modal').classList.add('show');
 }
 async function toggleAdStatus(id,status){
@@ -198,7 +203,9 @@ async function showAdDetail(id){
  const galleryHtml=gallery.length?'<div class="detail-gallery">'+gallery.map((im,i)=>'<img loading="lazy" src="'+escapeHtml(im.url)+'" alt="عکس '+(i+1)+' از '+escapeHtml(a.title)+'" onclick="openImageViewer(\''+escapeHtml(im.url)+'\')">').join('')+'</div><div class="hint">برای دیدن تصویر در اندازه بزرگ، روی آن بزنید.</div>':'<div class="photo" style="border-radius:13px;margin:12px 0">🛍️</div>';
  const location=[a.city,a.province].filter(Boolean).join('، ');
  document.getElementById('detailContent').innerHTML='<span class="category-tag">'+escapeHtml(a.category)+'</span>'+galleryHtml+'<div class="detail-price">'+money(a.price)+'</div><div class="detail-facts"><div class="detail-fact"><b>موقعیت</b>📍 '+escapeHtml(location||'ثبت نشده')+'</div><div class="detail-fact"><b>تاریخ ثبت</b>'+new Date(a.created_at).toLocaleDateString('fa-IR')+'</div></div>'+attrHtml+'<h3 style="font-size:16px;margin:18px 0 7px">توضیحات فروشنده</h3><div class="detail-description">'+escapeHtml(a.description||'توضیحی برای این آگهی ثبت نشده است.')+'</div>';
- document.getElementById('detailContent').innerHTML+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:18px"><button class="btn primary" onclick="startConversation(\''+a.id+'\',\''+a.user_id+'\')">💬 سؤال از فروشنده</button><button class="btn outline" onclick="reportAd(\''+a.id+'\')">گزارش آگهی</button></div>';
+ const {data:contact}=await db.from('ad_contact_settings').select('contact_phone,show_phone').eq('ad_id',a.id).maybeSingle();
+ if(contact?.show_phone&&contact?.contact_phone)document.getElementById('detailContent').innerHTML+='<div class="detail-facts"><div class="detail-fact"><b>شماره تماس فروشنده</b><a href="tel:'+escapeHtml(contact.contact_phone)+'" dir="ltr">'+escapeHtml(contact.contact_phone)+'</a></div></div>';
+ document.getElementById('detailContent').innerHTML+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:18px"><button class="btn primary" onclick="startConversation(\\''+a.id+'\\',\\''+a.user_id+'\\')">💬 سؤال از فروشنده</button><button class="btn outline" onclick="reportAd(\\''+a.id+'\\')">گزارش آگهی</button></div>';
  document.getElementById('detailModal').classList.add('show')
 }
 async function startConversation(adId,sellerId){
@@ -271,10 +278,20 @@ async function saveAd(e){
   if(btn)btn.textContent='در حال ذخیره آگهی…';
   const row={user_id:u.id,title:document.getElementById('title').value.trim(),category:document.getElementById('category').value,price:Number(document.getElementById('price').value)||0,province:document.getElementById('province').value,city:document.getElementById('city').value.trim(),description:document.getElementById('description').value.trim(),attributes:collectAdAttributes(),status:'pending_review'};
   if(files.length){row.images=uploaded;row.image_path=uploaded[0].path;row.image_url=uploaded[0].url}
-  let result;
+  let result, savedAdId=editingAdId;
   if(editingAdId)result=await db.from('ads').update({...row,updated_at:new Date().toISOString()}).eq('id',editingAdId).eq('user_id',u.id);
-  else result=await db.from('ads').insert(row);
+  else result=await db.from('ads').insert(row).select('id').single();
   if(result.error)throw result.error;
+  if(!editingAdId)savedAdId=result.data.id;
+  step='ذخیره تنظیمات شماره تماس';
+  const phone=document.getElementById('contactPhone').value.trim();
+  if(phone){
+   const {error:contactError}=await db.from('ad_contact_settings').upsert({ad_id:savedAdId,owner_id:u.id,contact_phone:phone,show_phone:document.getElementById('showContactPhone').checked,updated_at:new Date().toISOString()},{onConflict:'ad_id'});
+   if(contactError)throw contactError;
+  }else{
+   const {error:contactError}=await db.from('ad_contact_settings').delete().eq('ad_id',savedAdId).eq('owner_id',u.id);
+   if(contactError)throw contactError;
+  }
   editingAdId=null;
   form.reset();
   removeSelectedImage();
