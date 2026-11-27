@@ -156,7 +156,39 @@ function setEmailAuthMode(mode){emailAuthMode=mode==='signup'?'signup':'login';c
 function openAccount(){const u=currentUser();document.getElementById('phoneAuthForm').style.display=u?'none':'block';document.getElementById('accountForm').style.display='none';if(!u)setPhoneAuthMode('login');document.getElementById('accountInfo').style.display=u?'block':'none';document.getElementById('accountHeading').textContent=u?'حساب کاربری شما':'ورود / ثبت‌نام';if(u)document.getElementById('accountStatus').textContent='وارد شده‌اید: '+(u.phone||u.email||'');document.getElementById('accountModal').classList.add('show')}
 function normalizeIranPhone(value){let p=String(value||'').replace(/[\s()-]/g,'').replace(/[۰-۹]/g,d=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d));if(p.startsWith('+98'))p=p.slice(3);else if(p.startsWith('0098'))p=p.slice(4);else if(p.startsWith('98'))p=p.slice(2);if(p.startsWith('0'))p=p.slice(1);if(!/^9\d{9}$/.test(p))throw new Error('شماره موبایل معتبر نیست. شماره را مانند 09123456789 وارد کنید.');return '+98'+p}
 function validateNewPassword(password){if(password.length<12)throw new Error('برای امنیت حساب، رمز جدید باید حداقل ۱۲ نویسه داشته باشد.');if(!/[a-z]/.test(password)||!/[A-Z]/.test(password)||!/[0-9]/.test(password)||!/[!@#$%^&*()_+\-=\[\]{};':"\\|<>?,./`~]/.test(password))throw new Error('رمز جدید باید شامل حرف کوچک و بزرگ انگلیسی، عدد و نماد باشد.');}
-async function handlePhoneAuth(e){e.preventDefault();const btn=e.submitter;if(!db){toast('سرویس ورود هنوز بارگذاری نشده است. اینترنت یا VPN را بررسی کنید.');return}btn.disabled=true;try{const phone=normalizeIranPhone(document.getElementById('accountPhone').value),password=document.getElementById('phonePassword').value,name=document.getElementById('phoneName').value.trim();if(phoneAuthMode==='signup')validateNewPassword(password);if(phoneAuthMode==='signup'&&password!==document.getElementById('phonePasswordConfirm').value)throw new Error('تکرار رمز عبور یکسان نیست.');let result;if(phoneAuthMode==='signup'){result=await db.auth.signUp({phone,password,options:{data:name?{name}:{}}});if(result.error)throw result.error;if(!result.data.session){toast('حساب ساخته شد، اما هنوز نشست ورود ایجاد نشده است. تنظیم تأیید شماره را بررسی کنید.');return}}else{result=await db.auth.signInWithPassword({phone,password});if(result.error)throw result.error}window.currentAgahinoUser=result.data.user;updateAccountButton();closeAccount();toast(phoneAuthMode==='signup'?'ثبت‌نام و ورود با موفقیت انجام شد.':'با موفقیت وارد شدید.');await loadAds()}catch(err){toast('عملیات انجام نشد: '+(err.message||'خطای نامشخص'))}finally{btn.disabled=false}}
+async function handlePhoneAuth(e){
+ e.preventDefault();
+ const form=e.currentTarget;
+ const btn=e.submitter||form.querySelector('button[type="submit"]');
+ if(btn)btn.disabled=true;
+ try{
+  if(!db)throw new Error('سرویس ورود هنوز بارگذاری نشده است. اتصال اینترنت را بررسی کنید و صفحه را تازه‌سازی کنید.');
+  const phone=normalizeIranPhone(document.getElementById('accountPhone').value);
+  const password=document.getElementById('phonePassword').value;
+  const name=document.getElementById('phoneName').value.trim();
+  if(phoneAuthMode==='signup')validateNewPassword(password);
+  if(phoneAuthMode==='signup'&&password!==document.getElementById('phonePasswordConfirm').value)throw new Error('تکرار رمز عبور یکسان نیست.');
+  let result;
+  if(phoneAuthMode==='signup'){
+   result=await db.auth.signUp({phone,password,options:{data:name?{name}:{}}});
+   if(result.error)throw result.error;
+   if(!result.data.session){toast('حساب ساخته شد، اما ورود خودکار انجام نشد. تنظیم تأیید شماره باید بررسی شود.');return}
+  }else{
+   result=await db.auth.signInWithPassword({phone,password});
+   if(result.error)throw result.error;
+  }
+  window.currentAgahinoUser=result.data.user;
+  updateAccountButton();
+  closeAccount();
+  toast(phoneAuthMode==='signup'?'ثبت‌نام و ورود با موفقیت انجام شد.':'با موفقیت وارد شدید.');
+  await loadAds();
+ }catch(err){
+  console.error('Agahino phone authentication failed:',err);
+  toast('ورود انجام نشد: '+(err.message||'خطای نامشخص'));
+ }finally{
+  if(btn)btn.disabled=false;
+ }
+}
 function closeAccount(){document.getElementById('accountModal').classList.remove('show')}
 async function handleAuth(e){
  e.preventDefault();const email=document.getElementById('accountEmail').value.trim().toLowerCase(),password=document.getElementById('accountPassword').value,name=document.getElementById('accountName').value.trim(),btn=e.submitter;
