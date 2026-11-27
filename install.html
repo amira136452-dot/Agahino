@@ -4,26 +4,51 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#087d48">
-<title>راهنمای نصب آگهینو</title>
+<link rel="manifest" href="./manifest.webmanifest?v=green3">
+<link rel="icon" href="./icon.svg?v=green3" type="image/svg+xml">
+<title>نصب آگهینو</title>
 <style>
-*{box-sizing:border-box}body{margin:0;padding:24px 16px;background:#f4f7f5;color:#183329;font-family:Tahoma,Arial,sans-serif;line-height:2}.wrap{max-width:680px;margin:24px auto;background:#fff;padding:24px;border-radius:18px;box-shadow:0 8px 28px #173c2812}h1{font-size:23px;color:#087d48;margin-top:0}h2{font-size:17px;margin-bottom:4px}.step{background:#f5faf7;border:1px solid #dcebe1;border-radius:12px;padding:12px 15px;margin:10px 0}.btn{display:block;text-align:center;background:#087d48;color:#fff;text-decoration:none;padding:12px 18px;border-radius:12px;font-weight:bold;margin-top:18px}.muted{color:#60756b;font-size:13px}
+*{box-sizing:border-box}body{margin:0;padding:22px 16px;background:#f3f7f4;color:#183329;font-family:Tahoma,Arial,sans-serif;line-height:2}.wrap{max-width:520px;margin:20px auto;background:#fff;padding:26px 22px;border-radius:22px;text-align:center;box-shadow:0 8px 28px #173c2812}.logo{width:112px;height:112px;border-radius:25px;display:block;margin:4px auto 12px}h1{font-size:23px;color:#087d48;margin:8px 0}p{margin:6px 0 18px}.btn{display:block;width:100%;border:0;background:#087d48;color:#fff;text-decoration:none;padding:13px 18px;border-radius:13px;font-size:17px;font-weight:bold;margin:16px 0;cursor:pointer}.steps{display:none;text-align:right;background:#f5faf7;border:1px solid #dcebe1;border-radius:13px;padding:12px 16px;margin-top:16px}.steps.show{display:block}.muted{color:#60756b;font-size:13px}
 </style>
 </head>
 <body>
 <main class="wrap">
-<h1>نصب آگهینو روی صفحه اصلی گوشی</h1>
-<p>آگهینو از طریق مرورگر نصب می‌شود و لازم نیست از فروشگاه برنامه‌ها دانلودش کنید.</p>
-<h2>اگر گوشی اندرویدی دارید (Chrome):</h2>
-<div class="step">۱. همین صفحه را با مرورگر Chrome باز کنید.</div>
-<div class="step">۲. منوی سه‌نقطه بالای Chrome را بزنید.</div>
-<div class="step">۳. گزینه «Install app» یا «افزودن به صفحه اصلی / Add to Home screen» را انتخاب کنید.</div>
-<div class="step">۴. گزینه نصب یا افزودن را تأیید کنید. آیکون آگهینو به صفحه گوشی اضافه می‌شود.</div>
-<h2>اگر آیفون دارید (Safari):</h2>
-<div class="step">۱. لینک آگهینو را در Safari باز کنید.</div>
-<div class="step">۲. دکمه Share را بزنید و «Add to Home Screen» را انتخاب کنید.</div>
-<div class="step">۳. گزینه Add را بزنید.</div>
-<a class="btn" href="./">بازگشت به آگهینو</a>
-<p class="muted">اگر گزینه نصب در Chrome دیده نمی‌شود، ابتدا صفحه اصلی آگهینو را باز کنید و دوباره منوی سه‌نقطه را بررسی کنید.</p>
+<img class="logo" src="./icon.svg?v=green3" alt="لوگوی آگهینو">
+<h1>نصب آگهینو</h1>
+<p>آگهینو را به صفحه برنامه‌های گوشی‌تان اضافه کنید و مثل یک برنامه بازش کنید.</p>
+<button class="btn" id="installNow" type="button">نصب آگهینو</button>
+<section class="steps" id="steps">
+<strong>نصب از منوی Chrome</strong>
+<div>۱. منوی سه‌نقطه Chrome را باز کنید.</div>
+<div>۲. گزینه «Install app» یا «افزودن به صفحه اصلی» را بزنید.</div>
+<div>۳. نصب را تأیید کنید.</div>
+</section>
+<p class="muted">اگر دکمه نصب مستقیم در مرورگر شما فعال نباشد، راهنمای بالا را دنبال کنید.</p>
+<a class="btn" href="./" style="background:#e8f3ec;color:#087d48">بازگشت به آگهینو</a>
 </main>
+<script>
+(function(){
+ let promptEvent=null;
+ const button=document.getElementById('installNow');
+ const steps=document.getElementById('steps');
+ window.addEventListener('beforeinstallprompt',function(event){
+  event.preventDefault();
+  promptEvent=event;
+  button.textContent='آماده نصب؛ نصب کن';
+ });
+ button.addEventListener('click',async function(){
+  if(promptEvent){
+   promptEvent.prompt();
+   try{await promptEvent.userChoice;}catch(e){}
+   promptEvent=null;
+   return;
+  }
+  if(/iPhone|iPad|iPod/i.test(navigator.userAgent)){
+   steps.innerHTML='<strong>نصب در آیفون</strong><div>۱. صفحه را در Safari باز کنید.</div><div>۲. Share و سپس Add to Home Screen را بزنید.</div><div>۳. گزینه Add را انتخاب کنید.</div>';
+  }
+  steps.classList.add('show');
+ });
+})();
+</script>
 </body>
 </html>
