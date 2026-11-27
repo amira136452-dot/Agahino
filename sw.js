@@ -1,4 +1,4 @@
-const CACHE_NAME = "agahino-shell-v20";
+const CACHE_NAME = "agahino-shell-v21";
 const APP_FILES = ["./", "./index.html", "./manifest.webmanifest?v=green3", "./manifest-user.webmanifest", "./manifest-moderator.webmanifest", "./profile.html", "./admin.html", "./icon.svg?v=green3"];
 
 self.addEventListener("install", (event) => {
@@ -23,11 +23,13 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       fetch(new Request(request, { cache: "no-store" }))
         .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put("./index.html", copy));
+          if (response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          }
           return response;
         })
-        .catch(() => caches.match(request).then((cached) => cached || caches.match("./index.html")) )
+        .catch(() => caches.match(request).then((cached) => cached || caches.match("./index.html")))
     );
     return;
   }
