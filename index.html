@@ -44,7 +44,7 @@ footer{border-top:1px solid var(--line);background:#fff;padding:22px 0;color:var
 <body>
 <header><div class="wrap top">
 <a class="brand" href="#"><span class="logo"><img src="./icon.svg?v=green3" alt="" width="46" height="46"></span><span>آگهینو<small>بازار خرید، فروش و خدمات</small></span></a>
-<div class="top-actions"><button class="btn light" id="installAgahinoBtn" type="button" onclick="installAgahino()">نصب آگهینو</button><button class="btn light" onclick="shareAgahino()">معرفی آگهینو</button><button class="btn light" onclick="document.getElementById('categories').scrollIntoView({behavior:'smooth'})">دسته‌بندی‌ها</button><button class="btn outline" id="accountBtn" onclick="openAccount()">ورود / ثبت‌نام</button><a class="btn light" href="./profile.html" style="text-decoration:none">پنل کاربری</a><button class="btn primary" onclick="openModal()">＋ ثبت آگهی</button></div>
+<div class="top-actions"><button class="btn light" id="installAgahinoBtn" type="button">نصب آگهینو</button><button class="btn light" id="shareAgahinoBtn" type="button">معرفی آگهینو</button><button class="btn light" onclick="document.getElementById('categories').scrollIntoView({behavior:'smooth'})">دسته‌بندی‌ها</button><button class="btn outline" id="accountBtn" onclick="openAccount()">ورود / ثبت‌نام</button><a class="btn light" href="./profile.html" style="text-decoration:none">پنل کاربری</a><button class="btn primary" onclick="openModal()">＋ ثبت آگهی</button></div>
 </div></header>
 <section class="hero"><div class="wrap">
 <h1>هر چیزی برای خرید و فروش، اینجاست!</h1>
@@ -404,5 +404,67 @@ render();refreshSession().then(async()=>{await loadAds();await loadActiveCampaig
 setInterval(loadActiveCampaigns,60000);
 db.auth.onAuthStateChange((_event,session)=>{window.currentAgahinoUser=session?.user||null;updateAccountButton();loadAds()});
 if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}
+</script>
+
+<script>
+(function(){
+  let installPromptEvent = null;
+  window.addEventListener('beforeinstallprompt', function(event){
+    event.preventDefault();
+    installPromptEvent = event;
+  });
+  const installButton = document.getElementById('installAgahinoBtn');
+  const shareButton = document.getElementById('shareAgahinoBtn');
+  if (installButton) installButton.addEventListener('click', async function(){
+    if (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true) {
+      alert('آگهینو روی صفحه اصلی گوشی شما نصب است.');
+      return;
+    }
+    if (installPromptEvent) {
+      installPromptEvent.prompt();
+      try {
+        const choice = await installPromptEvent.userChoice;
+        alert(choice && choice.outcome === 'accepted' ? 'درخواست نصب آگهینو پذیرفته شد.' : 'نصب انجام نشد. هر زمان خواستید دوباره امتحان کنید.');
+      } catch (_) {
+        alert('برای نصب، منوی مرورگر را باز کنید و گزینه «Install app» یا «Add to Home screen» را بزنید.');
+      }
+      installPromptEvent = null;
+      return;
+    }
+    const ua = navigator.userAgent || '';
+    if (/iPhone|iPad|iPod/i.test(ua)) {
+      alert('برای نصب آگهینو: صفحه را در Safari باز کنید، Share را بزنید و گزینه Add to Home Screen را انتخاب کنید.');
+    } else {
+      alert('برای نصب آگهینو، منوی سه‌نقطه Chrome را باز کنید و گزینه «Install app» یا «Add to Home screen» را بزنید.');
+    }
+  });
+  if (shareButton) shareButton.addEventListener('click', async function(){
+    const url = 'https://amira136452-dot.github.io/Agahino/';
+    const data = {title:'آگهینو | بازار خرید، فروش و خدمات', text:'آگهینو؛ آگهی‌های خرید، فروش کالا و خدمات را ببینید یا آگهی خودتان را رایگان ثبت کنید.', url:url};
+    if (navigator.share) {
+      try { await navigator.share(data); return; }
+      catch (error) { if (error && error.name === 'AbortError') return; }
+    }
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(url);
+        alert('لینک آگهینو کپی شد؛ برای دوستانتان بفرستید.');
+        return;
+      }
+    } catch (_) {}
+    const field = document.createElement('textarea');
+    field.value = url;
+    field.setAttribute('readonly','');
+    field.style.position = 'fixed';
+    field.style.opacity = '0';
+    document.body.appendChild(field);
+    field.select();
+    let copied = false;
+    try { copied = document.execCommand('copy'); } catch (_) {}
+    field.remove();
+    if (copied) alert('لینک آگهینو کپی شد؛ برای دوستانتان بفرستید.');
+    else window.prompt('لینک آگهینو را کپی کنید:', url);
+  });
+})();
 </script>
 </body></html>
