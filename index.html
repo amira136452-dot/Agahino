@@ -23,6 +23,8 @@
 <link rel="icon" type="image/svg+xml" href="./icon.svg?v=green3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="آگهینو">
+<link rel="apple-touch-icon" href="./icon.svg?v=green3">
 <title>آگهینو | بازار خرید و فروش و خدمات</title>
 <style>
 :root{--blue:#087d48;--blue2:#06633a;--ink:#182230;--muted:#667085;--line:#e4e7ec;--bg:#f6f8fc;--white:#fff;--green:#079455;--red:#d92d20;--shadow:0 8px 28px rgba(16,24,40,.07)}
@@ -42,7 +44,7 @@ footer{border-top:1px solid var(--line);background:#fff;padding:22px 0;color:var
 <body>
 <header><div class="wrap top">
 <a class="brand" href="#"><span class="logo"><img src="./icon.svg?v=green3" alt="" width="46" height="46"></span><span>آگهینو<small>بازار خرید، فروش و خدمات</small></span></a>
-<div class="top-actions"><button class="btn light" onclick="shareAgahino()">معرفی آگهینو</button><button class="btn light" onclick="document.getElementById('categories').scrollIntoView({behavior:'smooth'})">دسته‌بندی‌ها</button><button class="btn outline" id="accountBtn" onclick="openAccount()">ورود / ثبت‌نام</button><a class="btn light" href="./profile.html" style="text-decoration:none">پنل کاربری</a><button class="btn primary" onclick="openModal()">＋ ثبت آگهی</button></div>
+<div class="top-actions"><button class="btn light" id="installAgahinoBtn" type="button" onclick="installAgahino()">نصب آگهینو</button><button class="btn light" onclick="shareAgahino()">معرفی آگهینو</button><button class="btn light" onclick="document.getElementById('categories').scrollIntoView({behavior:'smooth'})">دسته‌بندی‌ها</button><button class="btn outline" id="accountBtn" onclick="openAccount()">ورود / ثبت‌نام</button><a class="btn light" href="./profile.html" style="text-decoration:none">پنل کاربری</a><button class="btn primary" onclick="openModal()">＋ ثبت آگهی</button></div>
 </div></header>
 <section class="hero"><div class="wrap">
 <h1>هر چیزی برای خرید و فروش، اینجاست!</h1>
@@ -378,6 +380,25 @@ function setVehicleAttributes(a){
  document.querySelectorAll('#categoryFieldsGrid [data-attr-label]').forEach(el=>{el.value=a[el.dataset.attrLabel]||''});
 }
 
+let agahinoInstallPrompt=null;
+window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();agahinoInstallPrompt=event;});
+async function installAgahino(){
+ if(window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true){toast('آگهینو روی صفحه اصلی گوشی شما نصب است.');return}
+ if(agahinoInstallPrompt){
+  agahinoInstallPrompt.prompt();
+  const result=await agahinoInstallPrompt.userChoice;
+  agahinoInstallPrompt=null;
+  toast(result.outcome==='accepted'?'درخواست نصب آگهینو پذیرفته شد.':'نصب انجام نشد؛ هر زمان خواستید دوباره امتحان کنید.');
+  return;
+ }
+ const ua=navigator.userAgent||'';
+ const ios=/iPhone|iPad|iPod/i.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+ if(ios){
+  alert('روش نصب آگهینو روی آیفون:\\n۱) این صفحه را با مرورگر Safari باز کنید.\\n۲) دکمه اشتراک‌گذاری (Share) را بزنید.\\n۳) گزینه Add to Home Screen (افزودن به صفحه اصلی) را انتخاب کنید.\\n۴) اگر گزینه Open as Web App نمایش داده شد، آن را روشن کنید و Add را بزنید.');
+ }else{
+  alert('برای نصب آگهینو، منوی مرورگر را باز کنید و گزینه «Install app» یا «Add to Home screen» را بزنید. اگر این گزینه را نمی‌بینید، صفحه را با Chrome باز کنید و دوباره امتحان کنید.');
+ }
+}
 document.getElementById('image').addEventListener('change',previewSelectedImage);
 render();refreshSession().then(async()=>{await loadAds();await loadActiveCampaigns()});
 setInterval(loadActiveCampaigns,60000);
