@@ -42,7 +42,7 @@ footer{border-top:1px solid var(--line);background:#fff;padding:22px 0;color:var
 <body>
 <header><div class="wrap top">
 <a class="brand" href="#"><span class="logo"><img src="./icon.svg?v=green3" alt="" width="46" height="46"></span><span>آگهینو<small>بازار خرید، فروش و خدمات</small></span></a>
-<div class="top-actions"><button class="btn light" onclick="document.getElementById('categories').scrollIntoView({behavior:'smooth'})">دسته‌بندی‌ها</button><button class="btn outline" id="accountBtn" onclick="openAccount()">ورود / ثبت‌نام</button><a class="btn light" href="./profile.html" style="text-decoration:none">پنل کاربری</a><button class="btn primary" onclick="openModal()">＋ ثبت آگهی</button></div>
+<div class="top-actions"><button class="btn light" onclick="shareAgahino()">معرفی آگهینو</button><button class="btn light" onclick="document.getElementById('categories').scrollIntoView({behavior:'smooth'})">دسته‌بندی‌ها</button><button class="btn outline" id="accountBtn" onclick="openAccount()">ورود / ثبت‌نام</button><a class="btn light" href="./profile.html" style="text-decoration:none">پنل کاربری</a><button class="btn primary" onclick="openModal()">＋ ثبت آگهی</button></div>
 </div></header>
 <section class="hero"><div class="wrap">
 <h1>هر چیزی برای خرید و فروش، اینجاست!</h1>
@@ -114,6 +114,15 @@ async function loadActiveCampaigns(){const slot=document.getElementById('activeC
 function openCampaignModal(){if(!currentUser()){toast('برای ثبت سفارش تبلیغات ابتدا وارد حساب کاربری شوید.');openAccount();return}document.getElementById('campaignModal').classList.add('show')}
 function toggleCampaignMode(){const design=document.getElementById('campMode').value==='design';document.getElementById('campReadyFields').style.display=design?'none':'block';document.getElementById('campDesignFields').style.display=design?'block':'none'}
 async function submitCampaign(e){e.preventDefault();const u=currentUser();if(!u){toast('ابتدا وارد حساب کاربری شوید.');return}const design=document.getElementById('campMode').value==='design',type=document.getElementById('campType').value,body=document.getElementById('campBody').value.trim(),media=document.getElementById('campMedia').value.trim(),dest=document.getElementById('campDestination').value.trim();for(const url of [media,dest])if(url&&!/^https:\/\//i.test(url)){toast('لینک‌ها باید با https:// شروع شوند.');return}if(!design&&type==='text'&&!body){toast('متن تبلیغ را وارد کنید.');return}if(!design&&type!=='text'&&!media){toast('لینک تصویر یا GIF را وارد کنید.');return}const row={user_id:u.id,business_name:document.getElementById('campBusiness').value.trim(),contact_phone:document.getElementById('campPhone').value.trim(),title:document.getElementById('campTitle').value.trim(),body:design?'':body,creative_type:design?'text':type,media_url:design?null:media||null,destination_url:dest||null,duration_hours:Number(document.getElementById('campDuration').value),wants_design:design,design_brief:design?document.getElementById('campBrief').value.trim():null,status:design?'pending_design':'pending_review'};const {error}=await db.from('ad_campaigns').insert(row);if(error){toast('ثبت سفارش انجام نشد: '+error.message);return}document.getElementById('campaignForm').reset();toggleCampaignMode();document.getElementById('campaignModal').classList.remove('show');toast('سفارش ثبت شد و پس از بررسی ناظر پیگیری می‌شود.')}
+async function shareAgahino(){
+ const url='https://amira136452-dot.github.io/Agahino/';
+ const data={title:'آگهینو | بازار خرید، فروش و خدمات',text:'آگهینو؛ آگهی‌های خرید، فروش کالا و خدمات را ببینید یا آگهی خودتان را رایگان ثبت کنید.',url};
+ if(navigator.share){
+  try{await navigator.share(data);return}catch(err){if(err&&err.name==='AbortError')return}
+ }
+ try{await navigator.clipboard.writeText(url);toast('لینک آگهینو کپی شد؛ برای دوستانتان بفرستید.')}
+ catch(err){prompt('لینک آگهینو را کپی کنید:',url)}
+}
 function money(n){return n?Number(n).toLocaleString('fa-IR')+' تومان':'توافقی'}
 function toast(t){let e=document.getElementById('toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),3000)}
 function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
